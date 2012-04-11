@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Rapid apt 
+
+set -e
+set -o pipefail
+
+. lib/common.inc
+
+# Print help
+_help()
+{
+	echo ""
+	echo "$(basename $0) [options]"
+	echo ""
+	echo "Options:"
+	echo "  -c        Clean SYSROOT"
+	echo "  -s        Skip multistrap stage"
+	echo "  -f        Force copying of extra enviroment"
+	echo ""
+	_common_help
+	echo ""
+	echo "Logfile is $RAPTZ_LOGFILE"
+	echo ""
+	exit
+}
+
+_common_opts "csf" $@
+_common_init
+
+# Clean sysroot
+if (( $RAPTZ_CLEAN == 1 )) ; then
+	TOT=$(find $RAPTZ_SYSROOT | wc -l)
+	rm -rvf $RAPTZ_SYSROOT | \
+		_log_num $TOT "Cleaning $RAPTZ_SYSROOT"
+fi
+
+# Do the multistrap
+(( $RAPTZ_SKIP == 0 )) && \
+	multistrap -f $RAPTZ_NAME/multistrap.cfg -d $RAPTZ_SYSROOT 2>&1 | \
+		_log "Multistrapping $RAPTZ_NAME.cfg into $RAPTZ_SYSROOT"
+
+# Install internal scripts
+pushd $RAPTZ_NAME >> $RAPTZ_LOGFILE
+TOT=$(find | wc -l)
+for FILE in $(find) ; do
+	echo $FILE
+	if ( [ -e $RAPTZ_SYSROOT/$FILE ] && (( $RAPTZ_FORCE == 0 )) ) ; then
+		continue
+	fi
+	if [ -f $FILE ] ; then
+		mkdir -p $RAPTZ_SYSROOT/$(dirname $FILE) || true
+		if $(dirname $FILE | grep "bin$" >/dev/null) ; then
+			install -m 755 $FILE $RAPTZ_SYSROOT/$FILE
+		else
+			install $FILE $RAPTZ_SYSROOT/$FILE
+		fi
+	elif [ -d $FILE ] ; then
+		mkdir -p $RAPTZ_SYSROOT/$FILE
+	fi
+done | _log_num $TOT "Installing extra"
+popd >> $RAPTZ_LOGFILE
+

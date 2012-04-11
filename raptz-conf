@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Rapid apt 
+
+set -e
+set -o pipefail
+
+. lib/common.inc
+
+# Print help
+_help()
+{
+	echo ""
+	echo "$(basename $0) [options]"
+	echo ""
+	echo "Run configuration scripts for target"
+	echo ""
+	echo "Command Options:"
+	echo "  -D        Also install development files"
+	echo ""
+	_common_help
+	echo ""
+	echo "Logfile is $RAPTZ_LOGFILE"
+	echo ""
+	exit
+}
+
+_common_opts "D" $@
+_common_init
+
+# Run internal scripts
+for FILE in $(ls $RAPTZ_SYSROOT/etc/raptz/bin | sort -n) ; do
+	if ( (( $RAPTZ_ADD_DEV == 0 )) && echo $FILE | grep "dev.sh$" > /dev/null  ) ; then
+		continue
+	fi
+	./raptz-chroot /etc/raptz/bin/$FILE 2>&1 \
+			| _log "Running $FILE"
+done
+

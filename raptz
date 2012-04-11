@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Rapid apt 
+
+set -e
+set -o pipefail
+
+# Make sure we are root
+if [ "$(whoami)" != "root" ]; then
+	sudo $0 $@
+	exit
+fi
+
+# Set variables if not already set
+. lib/common.inc
+
+# Print help
+_help()
+{
+	echo ""
+	echo "$(basename $0) command [options]"
+	echo ""
+	echo "Commonly used commands:"
+	echo "  status     Print current status between target and host"
+	echo "  strap      Strap an un-configured sysroot"
+	echo "  conf       Run configure files in sysroot"
+	echo "  chroot     Enter a chroot enviroment in sysroot"
+	echo "  inst       Install system to a sd-card"
+	echo "  help <cmd> Show help for command"
+	echo ""
+	exit
+}
+
+[ -z "$1" ] && _help
+
+CMD=$1
+shift
+if [ "$CMD" == "help" ] ; then
+	if [ -z "$1" ] ; then
+		_help
+		exit
+	fi
+	./raptz-$1 -h
+	exit
+fi
+./raptz-$CMD $@

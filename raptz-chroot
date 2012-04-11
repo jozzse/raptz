@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Rapid apt 
+
+set -e
+
+. lib/common.inc
+
+# Print help
+_help()
+{
+	echo ""
+	echo "$(basename $0) [options]"
+	echo ""
+	echo "Enter into a previously strapped sysroot"
+	echo ""
+	_common_opts
+	echo ""
+	exit
+}
+
+
+_common_opts "-" $@
+_common_init
+
+# Prepare qemu chroot
+ln -sf $RAPTZ_SYSROOT/lib/ld-linux.so.3 /lib/ld-linux.so.3
+cp /usr/bin/qemu-arm-static $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
+	
+# Mount dev, dev/pts and proc
+mount -t proc proc $RAPTZ_SYSROOT/proc
+mount -o bind /dev $RAPTZ_SYSROOT/dev
+mount -o bind /dev/pts $RAPTZ_SYSROOT/dev/pts
+	
+# Do chroot
+RET=0
+export LC_ALL=C LANGUAGE=C LANG=C
+
+if [ -z "$@" ] ; then
+	ASHELL=/bin/bash
+else
+	ASHELL=/bin/dash
+fi
+
+RET=0
+echo "chroot $RAPTZ_SYSROOT $ASHELL -- $@"
+if ! chroot $RAPTZ_SYSROOT $ASHELL -- $@; then
+	echo "Chroot failed"
+	RET=1
+fi
+	
+if LPIDS=$(ps -A -o pid,cmd h | grep -r "^[0-9]*\ /usr/bin/qemu-arm-static"); then
+	echo "Killing Left running pids that should have been killed:"
+	echo $LPIDS
+	kill $(echo $LPIDS | awk '{ print $1 }')
+fi
+# Unmount 
+sleep 0.1 # Sleep for less then a second
+umount $RAPTZ_SYSROOT/dev/pts
+sleep 0.1 # Sleep for less then a second
+umount $RAPTZ_SYSROOT/dev
+sleep 0.1 # Sleep for less then a second
+umount $RAPTZ_SYSROOT/proc
+
+# Remove qemu chroot
+rm $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
+rm /lib/ld-linux.so.3
+# Return status of the chroot
+exit $RET
+

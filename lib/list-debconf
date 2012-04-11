@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for PKG in $(dpkg -l | grep "^ii" | awk '{print $2}') ; do
+	echo "*** $PKG"
+	debconf-show $PKG
+done
+

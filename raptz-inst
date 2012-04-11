@@ -1,0 +1,94 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+. lib/common.inc
+
+_mkimg()
+{
+	while read LINE ; do
+		echo $LINE
+		echo $LINE >&2
+	done | cpio -o | tee $1 | gzip > $1.gz
+}
+
+_help()
+{
+	echo ""
+	echo "$(basename $0) [options]"
+	echo ""
+	echo "Options:"
+	echo "  -d <dev>  Device name to install to (default none)"
+	echo "  -i <file> Use predefined cpio gzip archive"
+	echo "  -c        Clean device (create new filesystem)"
+	echo "  -s        Skip extraction stage, only create image"
+	echo "  -f        Force unpacking (very dangerous)"
+	echo ""
+	echo "Logfile is $RAPTZ_LOGFILE"
+	echo ""
+	exit
+}
+
+_common_opt "dicsf" $@
+_common_init
+
+date > $RAPTZ_LOGFILE
+
+mkdir -p images
+
+
+TOT=0
+if [ -z "$RAPTZ_IMAGE" ] ; then
+	RAPTZ_IMAGE=$PWD/images/$RAPTZ_NAME.cpio
+	pushd $RAPTZ_SYSROOT >> $RAPTZ_LOGFILE
+	TOT=$(find | wc -l)
+	find | _mkimg $RAPTZ_IMAGE 2>&1 | _log_num $TOT "Create $RAPTZ_IMAGE and $RAPTZ_IMAGE.gz file"
+	popd >> $RAPTZ_LOGFILE
+fi
+
+echo $RAPTZ_IMAGE | grep "^/" > /dev/null || \
+	RAPTZ_IMAGE=$PWD/$RAPTZ_IMAGE
+
+[ -f $RAPTZ_IMAGE ] || \
+	_error "Image $RAPTZ_IMAGE not found"
+
+(( $RAPTZ_SKIP == 1 )) && exit 0
+
+# ensure device is avalible
+if (( $RAPTZ_FORCE == 0 )) ; then
+	[ -n "$RAPTZ_DEV" ] || _error "Please use -d <dev>."
+	BLKDEV=${RAPTZ_DEV:0:-1}
+	[ -b /dev/$BLKDEV ] || \
+		_error "Could not find /dev/$BLKDEV or not a blockdevice"
+	[ -b /dev/$RAPTZ_DEV ] || \
+		_error "Could not find /dev/$RAPTZ_DEV or not a blockdevice"
+	if [ -e /sys/block/$BLKDEV/removable ] ; then
+		(( $(cat /sys/block/$BLKDEV/removable) == 1 )) || \
+			_error "Device $RAPTZ_DEV is not a removable device"
+	fi
+fi
+
+if (( $RAPTZ_CLEAN == 1 )) ; then
+	mkfs.ext3 /dev/$RAPTZ_DEV 2>&1 | \
+		_log "Creating ext3 filesystem om /dev/$RAPTZ_DEV" \
+		|| _error "Error createing fs"
+	
+fi
+
+_dev_ext()
+{
+	echo "Mounting $RAPTZ_DEV"
+	MNT=$(mktemp -d)
+	mount /dev/$RAPTZ_DEV $MNT
+
+	pushd $MNT
+	cat $RAPTZ_IMAGE | cpio -i 2>>$RAPTZ_LOGFILE 
+	popd
+	
+	echo "Demounting"
+	umount $MNT
+	rmdir $MNT
+}
+_dev_ext | _log "Copying to $RAPTZ_DEV"
+

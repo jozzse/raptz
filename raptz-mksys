@@ -1,0 +1,29 @@
+#!/bin/bash
+
+. lib/common.inc
+
+# Print help
+_help()
+{
+	echo ""
+	echo "$(basename $0) [options]"
+	echo ""
+	echo "Run strap, conf to compleatly prepare a sysroot"
+	echo ""
+	echo "Options:"
+	echo "  -c        Clean SYSROOT"
+	echo "  -f        Force copying of extra enviroment"
+	echo "  -s        Skip strapping system"
+	echo "  -D        Install development files"
+	echo ""
+	_common_help
+	echo ""
+	echo "Logfile is $RAPTZ_LOGFILE"
+	echo ""
+	exit
+}
+
+_common_opts "cfsD" $@
+./raptz-strap 
+./raptz-conf
+du -x --max-depth=0 -h $RAPTZ_SYSROOT

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+. lib/common.inc
+
+
+# Print help
+_help()
+{
+	echo ""
+	echo "$(basename $0) [options]"
+	echo ""
+	echo "Print current status between host and target"
+	echo ""
+	_common_help
+	echo ""
+	exit
+}
+
+# Get Options
+_common_opt "-" $@
+
+if LEFT_PIDS=$(ps -Al f | grep qemu-arm-static | grep -v grep)  ; then
+	echo "Left running pids that should have been killed:"
+	echo $LEFT_PIDS
+else
+	echo "pids - Ok"
+fi
+
+mount | grep "$RAPTZ_SYSROOT/dev" || echo "/dev - Ok"
+mount | grep "$RAPTZ_SYSROOT/dev/pts" || echo "/dev/pts - Ok"
+mount | grep "$RAPTZ_SYSROOT/proc" || echo "/proc - Ok"
+du -x --max-depth=0 -h $RAPTZ_SYSROOT
