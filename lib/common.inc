@@ -1,12 +1,9 @@
 
-_common_root()
-{
-	# Make sure we are root
-	if [ "$(whoami)" != "root" ]; then
-		sudo $0 $@
-		exit
-	fi
-}
+# Make sure we are root
+if [ "$(whoami)" != "root" ]; then
+	sudo $0 $@
+	exit
+fi
 
 
 # Set variables if not already set
@@ -46,6 +43,7 @@ _common_opts()
 		ARGS=$ARGS$1
 	fi
 	shift
+	echo $ARGS $@
 	while getopts $ARGS OPT
 	do
 		case $OPT in
@@ -59,6 +57,7 @@ _common_opts()
 				RAPTZ_SKIP=1
 				;;
 			D)
+				echo "ADD DEV"
 				RAPTZ_ADD_DEV=1
 				;;
 			d)

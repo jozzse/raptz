@@ -4,7 +4,6 @@ set -e
 set -o pipefail
 
 . lib/common.inc
-_common_root
 
 _mkimg()
 {

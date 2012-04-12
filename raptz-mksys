@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . lib/common.inc
-_common_root
 # Print help
 _help()
 {

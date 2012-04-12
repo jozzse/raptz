@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# Rapid apt 
-
 set -e
 set -o pipefail
 
 . lib/common.inc
-_common_root
+echo $@
 
 # Print help
 _help()
@@ -18,6 +16,7 @@ _help()
 	echo ""
 	echo "Command Options:"
 	echo "  -D        Also install development files"
+	echo "  -f        Force copying of extra enviroment"
 	echo ""
 	_common_help
 	echo ""
@@ -26,8 +25,32 @@ _help()
 	exit
 }
 
-_common_opts "D" $@
+_common_opts "Df" $@
 _common_ui
+
+echo $RAPTZ_ADD_DEV
+
+# Install internal scripts
+pushd $RAPTZ_NAME >> $RAPTZ_LOGFILE
+TOT=$(find | wc -l)
+for FILE in $(find) ; do
+	echo $FILE
+	if ( [ -e $RAPTZ_SYSROOT/$FILE ] && (( $RAPTZ_FORCE == 0 )) ) ; then
+		continue
+	fi
+	if [ -f $FILE ] ; then
+		mkdir -p $RAPTZ_SYSROOT/$(dirname $FILE) || true
+		if $(dirname $FILE | grep "bin$" >/dev/null) ; then
+			install -m 755 $FILE $RAPTZ_SYSROOT/$FILE
+		else
+			install $FILE $RAPTZ_SYSROOT/$FILE
+		fi
+	elif [ -d $FILE ] ; then
+		mkdir -p $RAPTZ_SYSROOT/$FILE
+	fi
+done | _log_num $TOT "Installing extra"
+popd >> $RAPTZ_LOGFILE
+
 
 # Run internal scripts
 for FILE in $(ls $RAPTZ_SYSROOT/etc/raptz/bin | sort -n) ; do
