@@ -43,7 +43,6 @@ _common_opts()
 		ARGS=$ARGS$1
 	fi
 	shift
-	echo $ARGS $@
 	while getopts $ARGS OPT
 	do
 		case $OPT in
@@ -57,7 +56,6 @@ _common_opts()
 				RAPTZ_SKIP=1
 				;;
 			D)
-				echo "ADD DEV"
 				RAPTZ_ADD_DEV=1
 				;;
 			d)
@@ -110,13 +108,22 @@ _common_chk_mount()
 	[ -z "$RAPTZ_SYSROOT" ] && _error "SYSROOT is $RAPTZ_SYSROOT"
 	[ -d "$RAPTZ_SYSROOT" ] || mkdir -p $RAPTZ_SYSROOT
 	
-	mount | grep $RAPTZ_SYSROOT/proc && umount $RAPTZ_SYSROOT/proc
-	mount | grep $RAPTZ_SYSROOT/dev/pts && umount $RAPTZ_SYSROOT/dev/pts
-	mount | grep $RAPTZ_SYSROOT/dev && umount $RAPTZ_SYSROOT/dev
+	if mount | grep $RAPTZ_SYSROOT/dev/pts ; then
+			umount -l $RAPTZ_SYSROOT/dev/pts
+			sleep 1.0
+	fi
+	if mount | grep $RAPTZ_SYSROOT/dev ; then
+		umount -l $RAPTZ_SYSROOT/dev
+		sleep 1.0
+	fi
+	if mount | grep $RAPTZ_SYSROOT/proc ; then
+		umount -l $RAPTZ_SYSROOT/proc
+		sleep 1.0
+	fi
 	
-	mount | grep $RAPTZ_SYSROOT/proc && _error "Could not unmount proc"
 	mount | grep $RAPTZ_SYSROOT/dev/pts && _error "Could not unmount dev/pts"
 	mount | grep $RAPTZ_SYSROOT/dev && _error "Could not unmount dev"
-	return 0	
+	mount | grep $RAPTZ_SYSROOT/proc && _error "Could not unmount proc"
+	return 0
 }
 

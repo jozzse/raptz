@@ -18,9 +18,9 @@ _help()
 # Get Options
 _common_opt "-" $@
 
-if LEFT_PIDS=$(ps -Al f | grep qemu-arm-static | grep -v grep)  ; then
+if LPIDS=$(ps -A -o pid,cmd h | grep -r "^[0-9]*\ /usr/bin/qemu-arm-static"); then
 	echo "Left running pids that should have been killed:"
-	echo $LEFT_PIDS
+	echo $LPIDS
 else
 	echo "pids - Ok"
 fi

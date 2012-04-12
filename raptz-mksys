@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 . lib/common.inc
 # Print help
 _help()

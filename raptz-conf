@@ -4,7 +4,6 @@ set -e
 set -o pipefail
 
 . lib/common.inc
-echo $@
 
 # Print help
 _help()
@@ -27,8 +26,7 @@ _help()
 
 _common_opts "Df" $@
 _common_ui
-
-echo $RAPTZ_ADD_DEV
+_common_chk_mount
 
 # Install internal scripts
 pushd $RAPTZ_NAME >> $RAPTZ_LOGFILE
