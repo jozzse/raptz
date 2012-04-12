@@ -30,6 +30,7 @@ _common_help()
 	echo "Common Options:"
 	echo "  -n <name> Change configuration name (default default)"
 	echo "  -u <name> Set RAPTZ_UI (default: text, avalible: gtk, dialog, text, raw, quiet)"
+	echo "  -r <path> Use specific sysroot path"
 	echo "  -h        Show this help and exit"
 }
 
@@ -40,7 +41,7 @@ _common_help()
 # Call: _common_opts [opts] $@
 _common_opts()
 {
-	ARGS="n:u:h"
+	ARGS="r:n:u:h"
 	if [ "$1" != "-" ] ; then
 		ARGS=$ARGS$1
 	fi
@@ -69,6 +70,9 @@ _common_opts()
 				;;
 			i)
 				RAPTZ_IMAGE=$OPTARG
+				;;
+			r)
+				RAPTZ_SYSROOT=$OPTARG
 				;;
 			u)
 				RAPTZ_UI=$OPTARG
