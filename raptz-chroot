@@ -5,6 +5,7 @@
 set -e
 
 . lib/common.inc
+_common_root
 
 # Print help
 _help()
@@ -21,7 +22,8 @@ _help()
 
 
 _common_opts "-" $@
-_common_init
+_common_ui
+_common_chk_mount
 
 # Prepare qemu chroot
 ln -sf $RAPTZ_SYSROOT/lib/ld-linux.so.3 /lib/ld-linux.so.3
@@ -42,6 +44,13 @@ else
 	ASHELL=/bin/dash
 fi
 
+# Disable starting of daemons
+cat > $RAPTZ_SYSROOT/usr/sbin/policy-rc.d <<EOF
+#!/bin/dash
+exit 101
+EOF
+chmod 755 $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
+
 RET=0
 echo "chroot $RAPTZ_SYSROOT $ASHELL -- $@"
 if ! chroot $RAPTZ_SYSROOT $ASHELL -- $@; then
@@ -54,6 +63,10 @@ if LPIDS=$(ps -A -o pid,cmd h | grep -r "^[0-9]*\ /usr/bin/qemu-arm-static"); th
 	echo $LPIDS
 	kill $(echo $LPIDS | awk '{ print $1 }')
 fi
+
+# Remove daemon disabler
+rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
+
 # Unmount 
 sleep 0.1 # Sleep for less then a second
 umount $RAPTZ_SYSROOT/dev/pts

@@ -6,6 +6,7 @@ set -e
 set -o pipefail
 
 . lib/common.inc
+_common_root
 
 # Print help
 _help()
@@ -26,7 +27,8 @@ _help()
 }
 
 _common_opts "csf" $@
-_common_init
+_common_ui
+_common_chk_mount
 
 # Clean sysroot
 if (( $RAPTZ_CLEAN == 1 )) ; then

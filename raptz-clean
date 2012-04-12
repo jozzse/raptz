@@ -5,6 +5,7 @@
 set -e
 
 . lib/common.inc
+_common_root
 
 # Print help
 _help()
@@ -26,7 +27,8 @@ if [ -n "$LPIDS" ] ; then
 	kill $(echo $LPIDS | awk '{ print $1 }')
 fi
 _common_opts "-" $@
-_common_init
+_common_ui
+_common_chk_mount
 
 rm -rf $RAPTZ_SYSROOT/etc/raptz
 rm $RAPTZ_SYSROOT/multistrap.cfg

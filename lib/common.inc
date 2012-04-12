@@ -1,9 +1,12 @@
 
-# Make sure we are root
-if [ "$(whoami)" != "root" ]; then
-	sudo $0 $@
-	exit
-fi
+_common_root()
+{
+	# Make sure we are root
+	if [ "$(whoami)" != "root" ]; then
+		sudo $0 $@
+		exit
+	fi
+}
 
 
 # Set variables if not already set
@@ -79,7 +82,13 @@ _common_opts()
 	shift $((OPTIND-1))
 }
 
-_common_init()
+_error()
+{
+	echo $*
+	exit 1
+}
+
+_common_ui()
 {
 	if ! [ -f lib/ui.$RAPTZ_UI.inc ] ; then
 		echo "RAPTZ_UI not found!, using text"
@@ -90,9 +99,13 @@ _common_init()
 	# Always check for dependencies
 	[ -x /usr/sbin/multistrap ]     || _error "multistrap not found"
 	[ -x /usr/bin/qemu-arm-static ] || _error "qemu-arm-static not found"
+}
 
+_common_chk_mount()
+{
 	[ -z "$RAPTZ_NAME" ] && _error "SYSROOT is $RAPTZ_NAME"
 	[ -z "$RAPTZ_SYSROOT" ] && _error "SYSROOT is $RAPTZ_SYSROOT"
+	[ -d "$RAPTZ_SYSROOT" ] || mkdir -p $RAPTZ_SYSROOT
 	
 	mount | grep $RAPTZ_SYSROOT/proc && umount $RAPTZ_SYSROOT/proc
 	mount | grep $RAPTZ_SYSROOT/dev/pts && umount $RAPTZ_SYSROOT/dev/pts
@@ -101,7 +114,6 @@ _common_init()
 	mount | grep $RAPTZ_SYSROOT/proc && _error "Could not unmount proc"
 	mount | grep $RAPTZ_SYSROOT/dev/pts && _error "Could not unmount dev/pts"
 	mount | grep $RAPTZ_SYSROOT/dev && _error "Could not unmount dev"
-	
-	[ -d "$RAPTZ_SYSROOT" ] || mkdir -p $RAPTZ_SYSROOT
+	return 0	
 }
 

@@ -21,7 +21,7 @@ _help()
 
 
 _common_opts "-" $@
-_common_init
+_common_ui
 
 KERNELDIR=$1
 [ -d "$KERNELDIR" ] || _error "$KERNELDIR not found"
@@ -47,4 +47,12 @@ chmod 755 .
 EOF
 }
 
+_modules()
+{
+	MODDIR=$PWD/$RAPTZ_NAME
+	pushd $KERNELDIR
+	make ARCH=arm modules_install INSTALL_MOD_PATH=$MODDIR
+	popd
+}
 _headers | _log "Preparing kernel headers"
+_modules | _log "Preparing kernel modules"

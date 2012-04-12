@@ -6,6 +6,7 @@ set -e
 set -o pipefail
 
 . lib/common.inc
+_common_root
 
 # Print help
 _help()
@@ -26,7 +27,7 @@ _help()
 }
 
 _common_opts "D" $@
-_common_init
+_common_ui
 
 # Run internal scripts
 for FILE in $(ls $RAPTZ_SYSROOT/etc/raptz/bin | sort -n) ; do

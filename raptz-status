@@ -2,7 +2,6 @@
 
 . lib/common.inc
 
-
 # Print help
 _help()
 {
