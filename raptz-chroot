@@ -58,7 +58,7 @@ if ! chroot $RAPTZ_SYSROOT $ASHELL -- $@; then
 fi
 	
 echo "Unmount"
-if LPIDS=$(ps -A -o pid,cmd h | grep -r "^[0-9]*\ /usr/bin/qemu-arm-static"); then
+if LPIDS=$(ps -A -o pid,cmd h | grep  "^[0-9]*\ /usr/bin/qemu-arm-static"); then
 	echo "Killing Left running pids that should have been killed:"
 	echo $LPIDS
 	kill $(echo $LPIDS | awk '{ print $1 }')
