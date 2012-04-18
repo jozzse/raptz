@@ -57,11 +57,13 @@ if ! chroot $RAPTZ_SYSROOT $ASHELL -- $@; then
 	RET=1
 fi
 	
+echo "Unmount"
 if LPIDS=$(ps -A -o pid,cmd h | grep -r "^[0-9]*\ /usr/bin/qemu-arm-static"); then
 	echo "Killing Left running pids that should have been killed:"
 	echo $LPIDS
 	kill $(echo $LPIDS | awk '{ print $1 }')
 fi
+echo "Unmount done"
 
 # Remove daemon disabler
 rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
@@ -69,9 +71,7 @@ rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
 # Unmount 
 sleep 0.1 # Sleep for less then a second
 umount $RAPTZ_SYSROOT/dev/pts
-sleep 0.1 # Sleep for less then a second
 umount $RAPTZ_SYSROOT/dev
-sleep 0.1 # Sleep for less then a second
 umount $RAPTZ_SYSROOT/proc
 
 # Remove qemu chroot

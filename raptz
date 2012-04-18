@@ -21,6 +21,7 @@ _help()
 	echo "$(basename $0) command [options]"
 	echo ""
 	echo "Commonly used commands:"
+	echo "  mksys      Strap and configure a complete sysroot"
 	echo "  status     Print current status between target and host"
 	echo "  strap      Strap an un-configured sysroot"
 	echo "  conf       Run configure files in sysroot"

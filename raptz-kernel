@@ -12,7 +12,10 @@ _help()
 	echo ""
 	echo "$(basename $0) [options] [path-to-kernel-source-root]"
 	echo ""
-	echo "Prepare and include klernel headers"
+	echo "Prepare and setup kernel"
+	echo ""
+	echo "Special options:"
+	echo "   -D     Prepare kernel headers"
 	echo ""
 	_common_opts
 	echo ""
@@ -20,7 +23,7 @@ _help()
 }
 
 
-_common_opts "-" $@
+_common_opts "D" $@
 _common_ui
 
 KERNELDIR=$1
@@ -51,8 +54,10 @@ _modules()
 {
 	MODDIR=$PWD/$RAPTZ_NAME
 	pushd $KERNELDIR
-	make ARCH=arm modules_install INSTALL_MOD_PATH=$MODDIR
+	make LOCALVERSION= ARCH=arm modules_install INSTALL_MOD_PATH=$MODDIR
 	popd
 }
-_headers | _log "Preparing kernel headers"
+if (( $RAPTZ_ADD_DEV == 1 )) ; then
+	_headers | _log "Preparing kernel headers"
+fi
 _modules | _log "Preparing kernel modules"
