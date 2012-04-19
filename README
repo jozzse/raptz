@@ -53,7 +53,7 @@ This move makes them a part of the main sysroot.
 Step 3 - Execute raptz script in qemu chroot (raptz conf)
 ----------------------------------------------------------
 
-After the move each directory in <confdir>/conf/ folder is mounted on a temporary 
+After the each directory in <confdir>/conf/ folder is copied to a temporary 
 directory in the sysroot and it's init scripts will be executed in a qemu enviroment.
 The number of the directory name specified the order of execution.
 Execution is done within a qemu-static chroot with the temporary directory included

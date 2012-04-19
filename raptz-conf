@@ -39,18 +39,18 @@ CONF_CHPATH=/tmp/$(basename $CONF_POINT)
 
 for DIR in $(ls -p $CONF_DIR | grep "^[0-9][0-9].*\/$" | sort -n); do
 	# For each script mount it in /tmp and run init.sh and init.dev.sh if avalible
-	mount -o bind $CONF_DIR/$DIR $CONF_POINT
+	cp -r $CONF_DIR/$DIR/* $CONF_POINT
 	
 	if [ -f $CONF_POINT/init.sh ] ; then
 		./raptz-chroot $CONF_CHPATH/init.sh $CONF_CHPATH
-	fi 2>&1 | _log "Running configuration ${DIR:0:-1}"
+	fi 2>&1 | _log "Running configuration ${DIR}"
 
 	if (( $RAPTZ_ADD_DEV )) ; then
 		if [ -f $CONF_POINT/init.dev.sh ] ; then
 		./raptz-chroot $CONF_CHPATH/init.dev.sh $CONF_CHPATH
-		fi 2>&1 | _log "Runnint development configuration ${DIR:0:-1}"
+		fi 2>&1 | _log "Runnint development configuration ${DIR}"
 	fi
-	umount $CONF_POINT
+	rm -rf $CONF_POINT/*
 done
 rmdir $CONF_POINT
 
