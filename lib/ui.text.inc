@@ -72,5 +72,6 @@ _log_num()
 		fi
 		echo $LINE >> $RAPTZ_LOGFILE
 	done
+	printf "\\r%3d%% %10d lines" 100 $C
 	echo ""
 }
