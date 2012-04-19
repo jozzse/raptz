@@ -28,34 +28,31 @@ _common_opts "Df" $@
 _common_ui
 _common_chk_mount
 
-# Install internal scripts
-pushd $RAPTZ_NAME >> $RAPTZ_LOGFILE
-TOT=$(find | wc -l)
-for FILE in $(find) ; do
-	echo $FILE
-	if ( [ -e $RAPTZ_SYSROOT/$FILE ] && (( $RAPTZ_FORCE == 0 )) ) ; then
-		continue
-	fi
-	if [ -f $FILE ] ; then
-		mkdir -p $RAPTZ_SYSROOT/$(dirname $FILE) || true
-		if $(dirname $FILE | grep "bin$" >/dev/null) ; then
-			install -m 755 $FILE $RAPTZ_SYSROOT/$FILE
-		else
-			install $FILE $RAPTZ_SYSROOT/$FILE
-		fi
-	elif [ -d $FILE ] ; then
-		mkdir -p $RAPTZ_SYSROOT/$FILE
-	fi
-done | _log_num $TOT "Installing extra"
-popd >> $RAPTZ_LOGFILE
+# Copy files if newer preserving links
+N=$(find $RAPTZ_NAME/root/ | wc -l)
+cp -v -u -d -r $RAPTZ_NAME/root/* $RAPTZ_SYSROOT | _log_num $N "Copying extra root files"
 
+# setup configuration
+CONF_DIR=$RAPTZ_NAME/conf
+CONF_POINT=$(mktemp -d --tmpdir=$RAPTZ_SYSROOT/tmp/)
+CONF_CHPATH=/tmp/$(basename $CONF_POINT)
 
-# Run internal scripts
-for FILE in $(ls $RAPTZ_SYSROOT/etc/raptz/bin | sort -n) ; do
-	if ( (( $RAPTZ_ADD_DEV == 0 )) && echo $FILE | grep "dev.sh$" > /dev/null  ) ; then
-		continue
+for DIR in $(ls -p $CONF_DIR | grep "^[0-9][0-9].*\/$" | sort -n); do
+	# For each script mount it in /tmp and run init.sh and init.dev.sh if avalible
+	mount -o bind $CONF_DIR/$DIR $CONF_POINT
+	
+	if [ -f $CONF_POINT/init.sh ] ; then
+		./raptz-chroot $CONF_CHPATH/init.sh $CONF_CHPATH
+	fi 2>&1 | _log "Running configuration ${DIR:0:-1}"
+
+	if (( $RAPTZ_ADD_DEV )) ; then
+		if [ -f $CONF_POINT/init.dev.sh ] ; then
+		./raptz-chroot $CONF_CHPATH/init.dev.sh $CONF_CHPATH
+		fi 2>&1 | _log "Runnint development configuration ${DIR:0:-1}"
 	fi
-	./raptz-chroot /etc/raptz/bin/$FILE 2>&1 \
-			| _log "Running $FILE"
+	umount $CONF_POINT
 done
+rmdir $CONF_POINT
+
+exit
 

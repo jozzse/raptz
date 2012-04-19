@@ -18,12 +18,36 @@ _log()
 	echo ""
 	echo $*
 	C=0
-	STR="-/|\\"
-
+	STR=".:|:.      "
+	P2=0
+	OA="."
+	OB="."
+	OC="."
+	OD="."
+	OE="."
+	OF="."
+	OG="."
+	OH="."
 	while read LINE ; do
 		C=$(( $C + 1 ))
-		P=$(( $C % 4 ))
-		printf "\\r${STR:$P:1}    %10s lines" $C
+		P1=$(( $C / 4 % 8 ))
+		if (( $P2 != $P1 )) ; then
+			OH=$OG
+			OG=$OF
+			OF=$OE
+			OE=$OD
+			OD=$OC
+			OC=$OB
+			OB=$OA
+			OA=${STR:$P1:1}
+			P2=$P1
+		fi
+		printf "\\r"
+		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
+		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
+		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
+		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
+		printf " %10s lines" $C
 		echo $LINE >> $RAPTZ_LOGFILE
 	done
 	echo ""
@@ -37,8 +61,8 @@ _log_num()
 	echo $* >> $RAPTZ_LOGFILE
 	echo ""
 	echo $*
-	C=0
-	NEXT=0
+	C=1
+	NEXT=1
 	while read LINE ; do
 		C=$(( $C + 1 ))
 		if (( $C > $NEXT )) ; then

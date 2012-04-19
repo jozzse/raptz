@@ -27,4 +27,7 @@ _help()
 _common_opts "cfsD" $@
 ./raptz-strap 
 ./raptz-conf
-du -x --max-depth=0 -h $RAPTZ_SYSROOT
+
+echo "SYSROOT=$RAPTZ_SYSROOT"
+echo ""
+echo "Is done and is $(du -x --max-depth=0 -h $RAPTZ_SYSROOT) MB"

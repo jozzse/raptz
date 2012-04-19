@@ -108,22 +108,19 @@ _common_chk_mount()
 	[ -z "$RAPTZ_SYSROOT" ] && _error "SYSROOT is $RAPTZ_SYSROOT"
 	[ -d "$RAPTZ_SYSROOT" ] || mkdir -p $RAPTZ_SYSROOT
 	
-	if mount | grep $RAPTZ_SYSROOT/dev/pts ; then
-			umount -l $RAPTZ_SYSROOT/dev/pts
-			sleep 1.0
+	if [ -n "$RAPTZ_MOUNT_CHECK" ] ; then
+		return 0
 	fi
-	if mount | grep $RAPTZ_SYSROOT/dev ; then
-		umount -l $RAPTZ_SYSROOT/dev
-		sleep 1.0
-	fi
-	if mount | grep $RAPTZ_SYSROOT/proc ; then
-		umount -l $RAPTZ_SYSROOT/proc
-		sleep 1.0
+	export RAPTZ_MOUNT_CHECK=1
+	
+	MP=$(df -l -a | grep /opt/heimdall/ | awk '{ print $6 }') || true
+	if [ -n "$MP" ] ; then
+		echo "UNMOUNTING $MP"
+		umount -l $MP
+		sleep 1
+		df -l -a | grep /opt/heimdall/ && _error "FAIL"
 	fi
 	
-	mount | grep $RAPTZ_SYSROOT/dev/pts && _error "Could not unmount dev/pts"
-	mount | grep $RAPTZ_SYSROOT/dev && _error "Could not unmount dev"
-	mount | grep $RAPTZ_SYSROOT/proc && _error "Could not unmount proc"
 	return 0
 }
 

@@ -12,9 +12,11 @@ top-dir
  +- default -> <confdir>	- A soft link pointing to the default confdir
  +- <confdir>		- The name of the sysroot (emdebian). 
  |  +- multistrap.cfg   - The multistrap configuration file
- |  +- etc              - /etc files to move to sysroot
- |     +- raptz         - Special raptz folder for sysroot preparation
- |        +- bin        - Binary configuration scripts [num]name<.dev>.sh
+ |  +- root             - Extra root files for the enviroment
+ |  +- conf             - Configuration files
+ |     +-<nn><name>     - Configuration directory
+ |       +- init.sh     - Optional init script
+ |       +- init.dev.sh - Optional init script for development
  +- lib                 - Common files for all raptz<cmd> scripts.
     +- ui.<name>.inc    - UI output script
     +- common.inc       - Common inclution.
@@ -43,28 +45,19 @@ Step 2 - Copy extra needed files to sysroot (raptz strap)
 Since multistrapping does not setup a complete system (configuration on target
 architecture is needed for example)
 
-After multistrapping the <confdir> folder is moved to the / sysroot. Files are
-only moved if they do not exists on the sysroot. This move makes them a part
-of the main sysroot.
+After multistrapping the <confdir>/root folder is copied to the / sysroot. Files 
+are copyed if newer than the file on sysroot or it does not exist on sysroot. 
+This move makes them a part of the main sysroot.
 
 
 Step 3 - Execute raptz script in qemu chroot (raptz conf)
 ----------------------------------------------------------
 
-After the move each script in <sysroot>/etc/raptz/bin folder is executed in
-order of numbered name of the script. Execution is done within a qemu-static
-chroot. Files ending in .dev.sh is only executed with -D flag (install
-development files). All extra files <sysroot>/etc/raptz/bin scripts need
-should be placed in the raptz folder. Make sure that daemons are halted after
-each script.
-
-
-Optional Step 4 - Clean sysroot (raptz clean)
----------------------------------------------
-
-Some raptz files can be cleaned after sysroot generation. Namely
-<sysroot>/multistrap.cfg and <sysroot>/etc/raptz* files. Other system cleaning
-should be done in Step 3.
+After the move each directory in <confdir>/conf/ folder is mounted on a temporary 
+directory in the sysroot and it's init scripts will be executed in a qemu enviroment.
+The number of the directory name specified the order of execution.
+Execution is done within a qemu-static chroot with the temporary directory included
+with the first argument. 
 
 Installing SysRoot to SD-Card
 =============================
