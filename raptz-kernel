@@ -10,12 +10,13 @@ set -e
 _help()
 {
 	echo ""
-	echo "$(basename $0) [options] [path-to-kernel-source-root]"
+	echo "$(basename $0) [options] " 
 	echo ""
 	echo "Prepare and setup kernel"
 	echo ""
 	echo "Special options:"
-	echo "   -D     Prepare kernel headers"
+	echo "   -d <path> Path to kernel source"
+	echo "   -D        Prepare kernel headers"
 	echo ""
 	_common_opts
 	echo ""
@@ -23,41 +24,29 @@ _help()
 }
 
 
-_common_opts "D" $@
+_common_opts "Dd:" $@
 _common_ui
 
-KERNELDIR=$1
+KERNELDIR=$RAPTZ_DEV
 [ -d "$KERNELDIR" ] || _error "$KERNELDIR not found"
 
 _headers()
 {
 	RAPTZDIR=$PWD/$RAPTZ_NAME/etc/raptz
 	pushd $KERNELDIR
-	TMPDIR=$(mktemp -d)
-	make ARCH=arm headers_install INSTALL_HDR_PATH=$TMPDIR
+	make LOCALVERSION= ARCH=arm headers_install INSTALL_HDR_PATH=$RAPTZ_SYSROOT/usr
 	popd
-	pushd $TMPDIR
-	tar czf $RAPTZDIR/headers.tar.gz .
-	popd
-	rm -r $TMPDIR
-	
-	cat > $RAPTZDIR/bin/40kernelheaders.dev.sh <<EOF
-#!/bin/dash
-set -e
-cd /usr
-tar xzf /etc/raptz/headers.tar.gz
-chmod 755 .
-EOF
 }
 
 _modules()
 {
-	MODDIR=$PWD/$RAPTZ_NAME
 	pushd $KERNELDIR
-	make LOCALVERSION= ARCH=arm modules_install INSTALL_MOD_PATH=$MODDIR
+	make LOCALVERSION= ARCH=arm modules_install INSTALL_MOD_PATH=$RAPTZ_SYSROOT
 	popd
 }
+
 if (( $RAPTZ_ADD_DEV == 1 )) ; then
 	_headers | _log "Preparing kernel headers"
 fi
 _modules | _log "Preparing kernel modules"
+echo ""
