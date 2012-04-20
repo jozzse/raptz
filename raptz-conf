@@ -42,13 +42,15 @@ for DIR in $(ls -p $CONF_DIR | grep "^[0-9][0-9].*\/$" | sort -n); do
 	cp -r $CONF_DIR/$DIR/* $CONF_POINT
 	
 	if [ -f $CONF_POINT/init.sh ] ; then
-		./raptz-chroot $CONF_CHPATH/init.sh $CONF_CHPATH
-	fi 2>&1 | _log "Running configuration ${DIR}"
+		./raptz-chroot $CONF_CHPATH/init.sh $CONF_CHPATH 2>&1 | \
+			_log "Running configuration ${DIR}"
+	fi 
 
 	if (( $RAPTZ_ADD_DEV )) ; then
 		if [ -f $CONF_POINT/init.dev.sh ] ; then
-		./raptz-chroot $CONF_CHPATH/init.dev.sh $CONF_CHPATH
-		fi 2>&1 | _log "Runnint development configuration ${DIR}"
+		./raptz-chroot $CONF_CHPATH/init.dev.sh $CONF_CHPATH 2>&1 | \
+			_log "Runnint development configuration ${DIR}"
+		fi 
 	fi
 	rm -rf $CONF_POINT/*
 done
