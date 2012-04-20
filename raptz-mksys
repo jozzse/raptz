@@ -30,4 +30,4 @@ _common_opts "cfsD" $@
 
 echo "SYSROOT=$RAPTZ_SYSROOT"
 echo ""
-echo "Is done and is $(du -x --max-depth=0 -h $RAPTZ_SYSROOT) MB"
+echo "Is done and is weighing in at a whopping $(du -x --max-depth=0 -h $RAPTZ_SYSROOT | cut -f 1)B"
