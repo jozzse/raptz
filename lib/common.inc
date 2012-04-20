@@ -15,12 +15,15 @@ fi
 [ -n "$RAPTZ_CLEAN" ]   || export RAPTZ_CLEAN=0
 [ -n "$RAPTZ_FORCE" ]   || export RAPTZ_FORCE=0
 [ -n "$RAPTZ_SKIP" ]    || export RAPTZ_SKIP=0
-[ -n "$RAPTZ_LOGFILE" ] || export RAPTZ_LOGFILE=$PWD/raptz.log
 [ -n "$RAPTZ_UI" ]      || export RAPTZ_UI=text
 [ -n "$RAPTZ_SYSROOT" ] || export RAPTZ_SYSROOT=/opt/$RAPTZ_NAME
 [ -n "$RAPTZ_ADD_DEV" ] || export RAPTZ_ADD_DEV=0
 [ -n "$RAPTZ_DEV" ] 	|| export RAPTZ_DEV=
 [ -n "$RAPTZ_IMAGE" ]   || export RAPTZ_IMAGE=
+if [ -z "$RAPTZ_LOGFILE" ]  ; then
+	export RAPTZ_LOGFILE=$PWD/raptz.log
+	date > $RAPTZ_LOGFILE
+fi
 
 _common_help()
 {

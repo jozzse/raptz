@@ -34,7 +34,6 @@ _common_opts "d:i:csf" $@
 _common_ui
 _common_chk_mount
 
-date > $RAPTZ_LOGFILE
 
 mkdir -p images
 
