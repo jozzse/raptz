@@ -116,12 +116,12 @@ _common_chk_mount()
 	fi
 	export RAPTZ_MOUNT_CHECK=1
 	
-	MP=$(df -l -a | grep /opt/heimdall/ | awk '{ print $6 }') || true
+	MP=$(df -l -a | grep $RAPTZ_SYSROOT | awk '{ print $6 }') || true
 	if [ -n "$MP" ] ; then
 		echo "UNMOUNTING $MP"
 		umount -l $MP
 		sleep 1
-		df -l -a | grep /opt/heimdall/ && _error "FAIL"
+		df -l -a | grep $RAPTZ_SYSROOT && _error "FAIL"
 	fi
 	
 	return 0
