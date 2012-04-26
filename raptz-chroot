@@ -25,9 +25,15 @@ _common_ui
 _common_chk_mount
 
 # Prepare qemu chroot
-ln -sf $RAPTZ_SYSROOT/lib/ld-linux.so.3 /lib/ld-linux.so.3
-cp /usr/bin/qemu-arm-static $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
+if ! [ -a $RAPTZ_SYSROOT/usr/bin/qemu-arm-static ] ; then
+	cp /usr/bin/qemu-arm-static $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
+	ln -sf $RAPTZ_SYSROOT/lib/ld-linux.so.3 /lib/ld-linux.so.3
 	
+	
+	RAPTZ_CHROOT_SETUP=1
+else
+	RAPTZ_CHROOT_SETUP=0
+fi
 # Mount dev, dev/pts and proc
 mount -t proc proc $RAPTZ_SYSROOT/proc
 mount -o bind /dev $RAPTZ_SYSROOT/dev
@@ -55,27 +61,29 @@ if ! chroot $RAPTZ_SYSROOT $ASHELL -- $@; then
 	echo "Chroot failed"
 	RET=1
 fi
-	
-echo "Unmount"
-if LPIDS=$(ps -A -o pid,cmd h | grep  "^[0-9]*\ /usr/bin/qemu-arm-static"); then
-	echo "Killing Left running pids that should have been killed:"
-	echo $LPIDS
-	kill $(echo $LPIDS | awk '{ print $1 }')
-fi
-echo "Unmount done"
+
+# When using multiple roots this causes problems. The unmount below should catch all errors
+#if LPIDS=$(ps -A -o pid,cmd h | grep  "^[0-9]*\ /usr/bin/qemu-arm-static"); then
+#	_error "Left pids after execution... Please fix $LPIDS"
+#	exit 1
+#fi
 
 # Remove daemon disabler
 rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
 
-# Unmount 
-sleep 0.1 # Sleep for less then a second
+sleep 0.1 # Sleep for less then a second giving qemu time to exit.
 umount $RAPTZ_SYSROOT/dev/pts
 umount $RAPTZ_SYSROOT/dev
 umount $RAPTZ_SYSROOT/proc
 
-# Remove qemu chroot
-rm $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
-rm /lib/ld-linux.so.3
+if (( $RAPTZ_CHROOT_SETUP  )) ; then
+
+	# Remove qemu chroot
+
+	rm $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
+	rm /lib/ld-linux.so.3
+fi
+
 # Return status of the chroot
 exit $RET
 

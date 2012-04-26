@@ -18,36 +18,20 @@ _log()
 	echo ""
 	echo $*
 	C=0
-	STR=".:|:.      "
-	P2=0
-	OA="."
-	OB="."
-	OC="."
-	OD="."
-	OE="."
-	OF="."
-	OG="."
-	OH="."
+	#    012345678
+	STR="<==     "
+	STR=$STR$STR
+	P2=-1
 	while read LINE ; do
 		C=$(( $C + 1 ))
 		P1=$(( $C / 4 % 8 ))
 		if (( $P2 != $P1 )) ; then
-			OH=$OG
-			OG=$OF
-			OF=$OE
-			OE=$OD
-			OD=$OC
-			OC=$OB
-			OB=$OA
-			OA=${STR:$P1:1}
-			P2=$P1
+			OA=${STR:$P1:8}
 		fi
-		printf "\\r"
-		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
-		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
-		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
-		echo -n "$OA$OB$OC$OD$OE$OF$OG$OH"
-		printf " %10s lines" $C
+		printf "\\r%10s lines" $C
+		echo -n "$OA"
+		echo -n "$OA"
+		echo -n "$OA"
 		echo $LINE >> $RAPTZ_LOGFILE
 	done
 	echo ""
@@ -67,11 +51,11 @@ _log_num()
 		C=$(( $C + 1 ))
 		if (( $C > $NEXT )) ; then
 			P=$(( $C * 100 / $TOT ))
-			printf "\\r%3d%% %10d lines" $P $C
+			printf "\\r%10s lines    %3d%%" $C $P
 			NEXT=$(( $NEXT + $TOT / 100 ))
 		fi
 		echo $LINE >> $RAPTZ_LOGFILE
 	done
-	printf "\\r%3d%% %10d lines" 100 $C
+	printf "\\r%10s lines    %3d%%" $C 100
 	echo ""
 }
