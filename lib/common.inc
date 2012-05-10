@@ -84,6 +84,7 @@ _common_opts()
 		esac
 	done
 	shift $((OPTIND-1))
+	EXT_OPTS=$@
 }
 
 _error()

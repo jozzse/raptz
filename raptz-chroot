@@ -24,6 +24,8 @@ _common_opts "-" $@
 _common_ui
 _common_chk_mount
 
+echo $EXT
+
 # Prepare qemu chroot
 if ! [ -a $RAPTZ_SYSROOT/usr/bin/qemu-arm-static ] ; then
 	cp /usr/bin/qemu-arm-static $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
@@ -43,7 +45,11 @@ mount -o bind /dev/pts $RAPTZ_SYSROOT/dev/pts
 RET=0
 export LC_ALL=C LANGUAGE=C LANG=C
 
-ASHELL=/bin/dash
+if [ -z "$EXT_OPTS" ] ; then 
+	ASHELL=/bin/dash
+else
+	ASHELL=$EXT_OPTS
+fi
 
 # Disable starting of daemons
 cat > $RAPTZ_SYSROOT/usr/sbin/policy-rc.d <<EOF
