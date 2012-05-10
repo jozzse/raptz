@@ -46,7 +46,7 @@ RET=0
 export LC_ALL=C LANGUAGE=C LANG=C
 
 if [ -z "$EXT_OPTS" ] ; then 
-	ASHELL=/bin/dash
+	ASHELL="/bin/dash -- $@"
 else
 	ASHELL=$EXT_OPTS
 fi
@@ -59,11 +59,11 @@ EOF
 chmod 755 $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
 
 RET=0
-echo "chroot $RAPTZ_SYSROOT $ASHELL -- $@"
+echo "chroot $RAPTZ_SYSROOT $ASHELL"
 export LC_ALL=C 
 export LANGUAGE=C 
 export LANG=C
-if ! chroot $RAPTZ_SYSROOT $ASHELL -- $@; then
+if ! chroot $RAPTZ_SYSROOT $ASHELL; then
 	echo "Chroot failed"
 	RET=1
 fi
