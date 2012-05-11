@@ -7,7 +7,6 @@ _error()
 	echo ""
 	echo -n "ERROR: "
 	echo $*
-	notify-send -u critical "Raptz Error" "$*"	
 	exit 1
 }
 
@@ -17,7 +16,6 @@ _log()
 	echo $* >> $RAPTZ_LOGFILE
 	echo ""
 	echo $*
-	notify-send -u low "Raptz Running" "$*"	
 	C=0
 	#    012345678
 	STR="<==     "
@@ -46,7 +44,6 @@ _log_num()
 	echo $* >> $RAPTZ_LOGFILE
 	echo ""
 	echo $*
-	notify-send -u low "Raptz Running" "$*"	
 	C=1
 	NEXT=1
 	while read LINE ; do

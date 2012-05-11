@@ -45,4 +45,5 @@ if [ "$CMD" == "help" ] ; then
 	exit
 fi
 ./raptz-$CMD $@
-#notify-send "Rapts complete" "The $CMD call was completed"
+
+[ -n "$DISPLAY" ] && notify-send "Rapts complete" "The $CMD call was completed"

@@ -20,7 +20,7 @@ _help()
 }
 
 
-_common_opts "-" $@
+_common_opts "n:r:h" $@
 _common_ui
 _common_chk_mount
 
