@@ -36,9 +36,9 @@ if ! [ -a $RAPTZ_SYSROOT/usr/bin/qemu-arm-static ] ; then
 else
 	RAPTZ_CHROOT_SETUP=0
 fi
-# Mount dev, dev/pts and proc
+# Mount dev/pts and proc
+[ -d $RAPTZ_SYSROOT/dev/pts ] ||  mkdir -p $RAPTZ_SYSROOT/dev/pts 
 mount -t proc proc $RAPTZ_SYSROOT/proc
-mount -o bind /dev $RAPTZ_SYSROOT/dev
 mount -o bind /dev/pts $RAPTZ_SYSROOT/dev/pts
 	
 # Do chroot
@@ -79,7 +79,6 @@ rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
 
 sleep 0.1 # Sleep for less then a second giving qemu time to exit.
 umount $RAPTZ_SYSROOT/dev/pts
-umount $RAPTZ_SYSROOT/dev
 umount $RAPTZ_SYSROOT/proc
 
 if (( $RAPTZ_CHROOT_SETUP  )) ; then
