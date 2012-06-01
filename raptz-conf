@@ -39,6 +39,10 @@ CONF_CHPATH=/tmp/$(basename $CONF_POINT)
 
 for DIR in $(ls -p $CONF_DIR | grep "^[0-9][0-9].*\/$" | sort -n); do
 	# For each script mount it in /tmp and run init.sh and init.dev.sh if avalible
+	if ! [[ -e $CONF_DIR/$DIR/init.sh || -e $CONF_DIR/$DIR/init.dev.sh ]]; then
+		echo "Note: $CONF_DIR/$DIR/ have no init.sh or init.dev.sh" 1>&2
+		continue;
+	fi
 	cp -r $CONF_DIR/$DIR/* $CONF_POINT
 	
 	if [ -f $CONF_POINT/init.sh ] ; then
