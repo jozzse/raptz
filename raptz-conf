@@ -55,7 +55,7 @@ for DIR in $(ls -p $CONF_DIR | grep "^[0-9][0-9].*\/$" | sort -n); do
 		if [ -f $CONF_POINT/init.dev.sh ] ; then
 			chmod +x $CONF_POINT/init.dev.sh
 			./raptz-chroot $CONF_CHPATH/init.dev.sh $CONF_CHPATH 2>&1 | \
-				_log "Runnint development configuration ${DIR}"
+				_log "Running development configuration ${DIR}"
 		fi 
 	fi
 	rm -rf $CONF_POINT/*
