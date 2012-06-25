@@ -14,17 +14,15 @@ _help()
 	echo ""
 	echo "Enter into a previously strapped sysroot"
 	echo ""
-	_common_opts
+	_common_help
 	echo ""
 	exit
 }
 
 
-_common_opts "n:r:h" $@
+_common_opts "n:r:hD" $@
 _common_ui
 _common_chk_mount
-
-echo $EXT
 
 # Prepare qemu chroot
 if ! [ -a $RAPTZ_SYSROOT/usr/bin/qemu-arm-static ] ; then
@@ -36,9 +34,15 @@ if ! [ -a $RAPTZ_SYSROOT/usr/bin/qemu-arm-static ] ; then
 else
 	RAPTZ_CHROOT_SETUP=0
 fi
-# Mount dev/pts and proc
-[ -d $RAPTZ_SYSROOT/dev/pts ] ||  mkdir -p $RAPTZ_SYSROOT/dev/pts 
+
 mount -t proc proc $RAPTZ_SYSROOT/proc
+
+# Mount dev/pts and proc
+if (( $RAPTZ_ADD_DEV == 1 )) ; then
+ 	# Only mount dev if -D is set
+	mount -o bind /dev $RAPTZ_SYSROOT/dev
+fi
+[ -d $RAPTZ_SYSROOT/dev/pts ] ||  mkdir -p $RAPTZ_SYSROOT/dev/pts 
 mount -o bind /dev/pts $RAPTZ_SYSROOT/dev/pts
 	
 # Do chroot
@@ -46,7 +50,7 @@ RET=0
 export LC_ALL=C LANGUAGE=C LANG=C
 
 if [ -z "$EXT_OPTS" ] ; then 
-	ASHELL="/bin/dash -- $@"
+	ASHELL="/bin/dash -- $EXT_OPTS"
 else
 	ASHELL=$EXT_OPTS
 fi
@@ -79,6 +83,11 @@ rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
 
 sleep 0.1 # Sleep for less then a second giving qemu time to exit.
 umount $RAPTZ_SYSROOT/dev/pts
+if [ -n "$RAPTZ_ADD_DEV" ] ; then
+	echo "Mount"
+	umount $RAPTZ_SYSROOT/dev
+fi
+
 umount $RAPTZ_SYSROOT/proc
 
 if (( $RAPTZ_CHROOT_SETUP  )) ; then
