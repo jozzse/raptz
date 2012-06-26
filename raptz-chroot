@@ -28,8 +28,6 @@ _common_chk_mount
 if ! [ -a $RAPTZ_SYSROOT/usr/bin/qemu-arm-static ] ; then
 	cp /usr/bin/qemu-arm-static $RAPTZ_SYSROOT/usr/bin/qemu-arm-static
 	ln -sf $RAPTZ_SYSROOT/lib/ld-linux.so.3 /lib/ld-linux.so.3
-	
-	
 	RAPTZ_CHROOT_SETUP=1
 else
 	RAPTZ_CHROOT_SETUP=0
@@ -83,8 +81,7 @@ rm $RAPTZ_SYSROOT/usr/sbin/policy-rc.d
 
 sleep 0.1 # Sleep for less then a second giving qemu time to exit.
 umount $RAPTZ_SYSROOT/dev/pts
-if [ -n "$RAPTZ_ADD_DEV" ] ; then
-	echo "Mount"
+if (( $RAPTZ_ADD_DEV == 1 )) ; then
 	umount $RAPTZ_SYSROOT/dev
 fi
 
