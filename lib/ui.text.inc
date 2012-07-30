@@ -18,7 +18,7 @@ _log()
 	echo $*
 	C=0
 	#    012345678
-	STR=".:|:.   "
+	STR="<>      "
 	STR=$STR$STR
 	P2=-1
 	while read LINE ; do

@@ -20,6 +20,7 @@ fi
 [ -n "$RAPTZ_ADD_DEV" ] || export RAPTZ_ADD_DEV=0
 [ -n "$RAPTZ_DEV" ] 	|| export RAPTZ_DEV=
 [ -n "$RAPTZ_IMAGE" ]   || export RAPTZ_IMAGE=
+[ -n "$RAPTZ_JFFS2" ]   || export RAPTZ_JFFS2=
 if [ -z "$RAPTZ_LOGFILE" ]  ; then
 	export RAPTZ_LOGFILE=$PWD/raptz.log
 	date > $RAPTZ_LOGFILE
@@ -70,6 +71,9 @@ _common_opts()
 				;;
 			i)
 				RAPTZ_IMAGE=$OPTARG
+				;;
+			j)
+				RAPTZ_JFFS2=$OPTARG
 				;;
 			r)
 				RAPTZ_SYSROOT=$OPTARG
