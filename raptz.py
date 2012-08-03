@@ -145,7 +145,7 @@ class Raptz():
 		self.configure()
 		
 		self.ui.stop()
-		self.ui.message("Sysroot size is %d MB" % (self.tools.dirsize(self.args.path) / 1024))
+		self.ui.message("Sysroot in %s size is %d MB" % (self.args.path ,self.tools.dirsize(self.args.path) / 1024))
 
 	def image(self):
 		files = self.tools.files(self.args.path, topdown=True)
@@ -272,12 +272,19 @@ class Raptz():
 	
 		self.args = parser.parse_args()
 	
-
-		if os.path.islink(self.args.name):
+		if self.args.name == "default":
+			# if name is default and a link then use linkname, otherwise use the name in name even if link.
+			if os.path.islink(self.args.name):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
-	
-		if self.args.path=="":
-			self.args.path="/opt/" + self.args.name
+			if self.args.path=="":
+				self.args.path="/opt/" + self.args.name
+		else:	
+			if self.args.path=="":
+				self.args.path="/opt/" + self.args.name
+			if os.path.islink(self.args.name):
+				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
+
+									
 		
 		self.ui = ui.get(self.args.ui)(self.args.logfile)
 		self.tools = Tools(self.ui)
