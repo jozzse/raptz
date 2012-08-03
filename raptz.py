@@ -78,7 +78,7 @@ class Raptz():
 		# Do the actuall chroot
 		if len(cmd) == 0:
 			# Invokation from commandline
-			ret = subprocess.call(["chroot", self.args.path] + self.args.command.split())
+			ret = subprocess.call(["chroot", self.args.path] + self.args.command)
 		else:
 			# Invokation from command
 			ret = self.tools.run("chroot", self.args.path, *cmd)
@@ -235,8 +235,8 @@ class Raptz():
 							   help='Add development packages to sysroot')
 	
 		# CHROOT
-		chrootp = subp.add_parser("chroot", help="Run arm chroot")
-		chrootp.add_argument('command', default="/bin/bash", help="Command to call")
+		chrootp = subp.add_parser("chroot", help="Run arm chroot", prefix_chars=" ")
+		chrootp.add_argument('command', default="/bin/bash", nargs='+', help="Command to call")
 		chrootp.set_defaults(func=self.chroot)
 	
 		# IMAGE
