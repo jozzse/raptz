@@ -271,7 +271,10 @@ class Raptz():
 							   help='Set logfile to <filename>')
 	
 		self.args = parser.parse_args()
-	
+
+		if not os.path.exists(self.args.name):
+			raise RaptzError("Specified configuration \"" + self.args.name + "\" does not exist")
+
 		if self.args.name == "default":
 			# if name is default and a link then use linkname, otherwise use the name in name even if link.
 			if os.path.islink(self.args.name):
@@ -293,13 +296,13 @@ class Raptz():
 		self.args.func()
 	
 if __name__=="__main__":
-	raptz = Raptz()
 	try:
+		raptz = Raptz()
 		raptz.start()
 	except RaptzError, why:
 		print ""
 		print ""
-		print "Failed to create sysroot. " + str(why)
+		print "Failed to create sysroot: " + str(why)
 	except KeyboardInterrupt:
 		print ""
 		print ""
