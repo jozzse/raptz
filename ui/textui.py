@@ -4,12 +4,12 @@ import time as ttt
 from time import time
 
 ANIM=(
-	"  (^_^/)  ",
+	" /(^_^/)  ",
 	" <(^_^<)  ",
 	" <(^_^ )> ",
 	" <( ^_^)> ",
 	"  (>^_^)> ",
-	"  (\\^_^)  ",
+	"  (\\^_^)\\ ",
 	None)
 
 def animate():
