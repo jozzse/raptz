@@ -296,8 +296,10 @@ class Raptz():
 		self.args.func()
 	
 if __name__=="__main__":
+	debug = False
 	try:
 		raptz = Raptz()
+		debug = raptz.args.debug
 		raptz.start()
 	except RaptzError, why:
 		print ""
@@ -311,13 +313,13 @@ if __name__=="__main__":
 		print ""
 		print ""
 		print "Got Base exception ", repr(why), ". Installation failed."
-		if raptz.args.debug:
+		if debug:
 			raise
 	except Exception, why:
 		print ""
 		print ""
 		print "Got exception", repr(why), ". Installation failed."
-		if raptz.args.debug:
+		if debug:
 			raise
 
 print ""
