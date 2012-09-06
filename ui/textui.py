@@ -1,4 +1,6 @@
 
+import math
+import sys
 from baseui import BaseUI
 import time as ttt
 from time import time
@@ -12,15 +14,21 @@ ANIM=(
 	"  (\\^_^)\\ ",
 	None)
 
+
+SIZE=24
 def animate():
 	global v
 	try:
 		v = v + 1
 	except NameError:
 		v = 0
-	if ANIM[v / 3] == None:
-		v = 0
-	return ANIM[v / 3]
+	b = int(abs((math.cos(v/11.0) * SIZE)))
+	s = int(abs((math.sin(v/7.0) * SIZE)))
+	if (b > s):
+		t = b
+		b = s
+		s = t
+	return " "*b + "<" + "="*(s-b) + ">" + " "*(SIZE - s)
 
 class Group():
 	def __init__(self, label="Init", subgroup=0, lines=0):
@@ -55,10 +63,10 @@ class Group():
 		self.time = t
 		print "\r\033[K",
 		if not self.lines:
-			print "".join([animate()]*3 + [ pre, self.label, ": ", str(self.cline) , " lines"]),
+			print "".join([animate(), pre, self.label, ": ", str(self.cline) , " lines"]),
 		else:
-			print "".join([animate()]*3 + [ pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%"]),
-			
+			print "".join([animate(), pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%"]),
+		sys.stdout.flush()	
 
 	def done(self):
 		"""

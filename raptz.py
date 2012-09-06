@@ -2,14 +2,16 @@
 
 # BSD New Licence (c) 2012 Jonas Zetterberg
 
-import stat
-import argparse
-import shutil
+import time
 import tempfile
+import fileopt
+import stat
+import shutil
 import sys
 import subprocess
 import os
 
+import rargs
 import ui
 from tools import Tools
 
@@ -17,6 +19,7 @@ RCDFILE_CONTENT = """#!/bin/dash
 exit 101
 """
 
+DEF_NAME="/opt/<name>"
 
 class RaptzError(Exception):
 	def __init__(self, text):
@@ -78,7 +81,7 @@ class Raptz():
 		# Do the actuall chroot
 		if len(cmd) == 0:
 			# Invokation from commandline
-			ret = subprocess.call(["chroot", self.args.path] + self.args.command)
+			ret = subprocess.call(["chroot", self.args.path] + self.argv)
 		else:
 			# Invokation from command
 			ret = self.tools.run("chroot", self.args.path, *cmd)
@@ -108,7 +111,7 @@ class Raptz():
 		self.ui.stop()
 
 	def configure(self):
-		# Copy and run configuration system
+		""" Copy and run configuration system """
 		self.ui.start("Configure")
 		bdir = os.path.join(self.args.name, "conf")
 		tdir = tempfile.mkdtemp(dir=os.path.join(self.args.path, "tmp"))
@@ -148,130 +151,77 @@ class Raptz():
 		self.ui.message("Sysroot in %s size is %d MB" % (self.args.path ,self.tools.dirsize(self.args.path) / 1024))
 
 	def image(self):
-		files = self.tools.files(self.args.path, topdown=True)
-		dirs = self.tools.dirs(self.args.path)
+		fo = fileopt.FileOpt(self.tools, self.ui)
 		if self.args.jffs2:
-			self.ui.start(self.args.jffs2 + "(jffs2)", len(files) + len(dirs))
-			self.tools.run("mkfs.jffs2", 
-				"-r", self.args.path,
-				"-l", "-n" ,"-e", "128",
-				"-v", "-o", self.args.jffs2)
-			self.ui.stop()
+			fo.mk_jffs2(self.args.path, self.args.jffs2)
 		if self.args.cpio:
-			self.ui.start(self.args.cpio + "(cpio)", len(files))
-			l = len(self.args.path)
-			f = ["".join([".", fl[l:], "\n"]) for fl in files]
-			fd=open("c", "wb", 0644)
-			p = subprocess.Popen(["cpio", "-o"], 
-				cwd=self.args.path,
-			    stdin=subprocess.PIPE,
-				stdout=fd)
-			for ff in f:
-				p.stdin.write(ff)
-				self.ui.line(ff)
-			p.stdin.close()
-			p.wait()
+			fo.mk_cpio(self.args.path, self.args.cpio)
+		if self.args.ext3:
+			size = self.tools.txt2size(self.args.size)
+			self.ui.start("Make " + self.args.ext3 + " (ext3 " + str(size) + " Bytes)")
+			self.tools.mkfile(self.args.ext3, self.tools.txt2size(self.args.size))
+			fo.mk_ext3(self.args.path, os.path.abspath(self.args.ext3), True, "-F", self.args.cpio)
 			self.ui.stop()
-		if self.args.device:
-			if not self.args.device.startswith("/"):
-				self.args.device="/dev/" + self.args.device
-			part = self.args.device[-4:]
-			dev = part[:-1]
-			m = os.stat(self.args.device).st_mode;
-			if not stat.S_ISBLK(m):
-				print "Not a Blockdevice"	
-				exit(1)
-			if not os.path.isfile("/sys/block/" + dev + "/removable"):
-				print "Not a removable device"
-				exit(1)
-			
-			if self.args.mkfs:
-				self.ui.start("Mkfs")
-				self.tools.run("mkfs.ext3", self.args.device)
-				self.ui.stop()
-			
-			mp = tempfile.mkdtemp(dir="/tmp")
-			self.ui.start("Mount(" + mp + ")")
-			self.tools.mount(self.args.device, mp)
-			self.ui.stop()
-			
-			self.ui.start(self.args.cpio + "(copy)", len(files))
-			l = len(self.args.path)
-			f = ["".join([".", fl[l:], "\n"]) for fl in files]
-			pipe = os.pipe()
-			po = subprocess.Popen(["cpio", "-o"],
-				cwd=self.args.path,
-			    stdin=subprocess.PIPE,
-				stdout=os.fdopen(pipe[1], "wb"))
-			pi = subprocess.Popen(["cpio", "-i"],
-				cwd=mp,
-				stdin=os.fdopen(pipe[0], "rb"))
-			for ff in f:
-				po.stdin.write(ff)
-				self.ui.line(ff)
-			po.stdin.close()
-			po.wait()
-			pi.wait()
-			self.ui.stop()
-			self.ui.start("UnMount(" + mp + ")")
-			self.tools.umount(mp)
-			self.ui.stop()
-
+		
+	def mkdev(self):
+		if not self.args.device:
+			print "No device specified"
+			exit(1)
+		if not self.args.device.startswith("/"):
+			self.args.device="/dev/" + self.args.device
+		part = self.args.device[-4:]
+		dev = part[:-1]
+		m = os.stat(self.args.device).st_mode;
+		if not stat.S_ISBLK(m):
+			print "Not a Blockdevice"	
+			exit(1)
+		if not os.path.isfile("/sys/block/" + dev + "/removable"):
+			print "Not a removable device"
+			exit(1)
+		fo = fileopt.FileOpt(self.tools, self.ui)
+		fo.mk_ext3(self.args.path, self.args.device, self.args.mkfs, "", self.args.cpio)
 
 	def config(self):
 		if self.args.resolv_conf:
 			print "/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf"
 			shutil.copy2("/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf")
 	def __init__(self):
-		parser = argparse.ArgumentParser(description='Raptz python UI.')
-		subp = parser.add_subparsers()
+		self.args = rargs.Rargs("Raptz sysroot handler")
+		self.args.AddArg("name", "n", "default", "Configuration Name")
+			
+		cmd = self.args.AddCmd("mksys", self.mksys, "Create a rootfs system");
+		cmd.AddArg("clean", "c", hlp="Clear sysroot directory before creating rootfs")
+		cmd.AddArg("dev", "D", hlp='Add development packages to sysroot')
 		
-		# SYSROOT
-		mksysp = subp.add_parser("mksys", help="Create a sysroot")
-		mksysp.set_defaults(func=self.mksys)
-		mksysp.add_argument('-c', '--clean', action='store_true',
-							   help='Clean sysroot before multistrapping')
-		mksysp.add_argument('-D', '--dev', action='store_true',
-							   help='Add development packages to sysroot')
-	
-		# CHROOT
-		chrootp = subp.add_parser("chroot", help="Run arm chroot", prefix_chars=" ")
-		chrootp.add_argument('command', default="/bin/bash", nargs='+', help="Command to call")
-		chrootp.set_defaults(func=self.chroot)
-	
-		# IMAGE
-		imagep = subp.add_parser("image", help="Create image from a sysroot")
-		imagep.set_defaults(func=self.image)
-		imagep.add_argument('-j', '--jffs2', metavar='<file>', default="", 
-							   help='Create jffs2 image')
-		imagep.add_argument('-c', '--cpio', metavar='<file>', default="", 
-							   help='Create cpio image')
-		imagep.add_argument('-d', '--device', metavar='<device>', default="", 
-							   help='Move to device')
-		imagep.add_argument("-m", "--mkfs", action='store_true',
-								help='Create filesystem')
+		cmd = self.args.AddCmd("chroot", self.chroot, "Run commands after -- argument in arm chroot enviroment");
+		cmd.DashDashArgs(True)
 		
-		# CONFIG
-		imagep = subp.add_parser("config", help="Change certain part of configuration")
-		imagep.set_defaults(func=self.config)
-		imagep.add_argument('-r', '--resolv-conf', action='store_true',
-							   help='Copy host system resolv.conf to configuration')
+		cmd = self.args.AddCmd("image", self.image, "Create image from a sysroot");
+		cmd.AddArg("jffs2", "j", "", "Create jffs2 image")
+		cmd.AddArg("cpio", "c", "", "Create cpio image")
+		cmd.AddArg("ext3", "e", "", "Create ext3 image")
+		cmd.AddArg("size", "s", "256M", "Specify image size if size can be specified (ext3). (postfix with k, M and G avalible)")
 
-		# BASIC
-		parser.add_argument('--debug', action='store_true',
-							   help='Enable debugmode')
-		parser.add_argument('-p', '--path', metavar='<path>', default="", 
-							   help='Path to sysroot (default=/opt/<name>)')
-		parser.add_argument('-n', '--name', metavar='<name>', default="default", 
-							   help='Name of configuration to use (default=default)')
-		parser.add_argument('-u', '--ui', metavar='<auto|raw|text>', default="auto", 
-							   help='UI selection (default=text)')
+		cmd = self.args.AddCmd("mkdev", self.mkdev, "Make block device root fs from rootfs")
+		cmd.AddArg("device", "d", "", "Move sysroot to ext3 filesystem on block device")
+		cmd.AddArg("mkfs", "m", hlp="Create ext3 filesystem on --device device")
+		cmd.AddArg("cpio", "c", "", hlp="Use this CPIO file instead of sysroot")
 
-		parser.add_argument('-l', "--logfile", metavar='<filename>', default="raptz.log",
-							   help='Set logfile to <filename>')
+		cmd = self.args.AddCmd("config", self.config, "Change certain part of configuration")
+		cmd.AddArg("resolv-conf", "r", hlp="Copy host system resolv.conf to configuration")
+		
+		self.args.AddArg("debug", hlp="Enable debugmode")
+		self.args.AddArg("path", "p", DEF_NAME, "Path to sysroot")
+		self.args.AddArg("name", "n", "default", "Configuration name")
+		self.args.AddArg("ui", "u", "auto", "Select UI")
+		self.args.AddArg("logfile", "l", "raptz.log", "Set logfile")
+		
+		self.argv = self.args.Parse(sys.argv[1:])
+		
+		if self.args.help:
+			return
+
 	
-		self.args = parser.parse_args()
-
 		if not os.path.exists(self.args.name):
 			raise RaptzError("Specified configuration \"" + self.args.name + "\" does not exist")
 
@@ -279,22 +229,20 @@ class Raptz():
 			# if name is default and a link then use linkname, otherwise use the name in name even if link.
 			if os.path.islink(self.args.name):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
-			if self.args.path=="":
-				self.args.path="/opt/" + self.args.name
+			if self.args.path==DEF_NAME:
+				self.args.path=DEF_NAME.replace("<name>", self.args.name)
 		else:	
-			if self.args.path=="":
-				self.args.path="/opt/" + self.args.name
+			if self.args.path==DEF_NAME:
+				self.args.path=DEF_NAME.replace("<name>", self.args.name)
 			if os.path.islink(self.args.name):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
-
-									
-		
+				
 		self.ui = ui.get(self.args.ui)(self.args.logfile)
 		self.tools = Tools(self.ui)
 
 	def start(self):
-		self.args.func()
-	
+		return self.args.Func()
+
 if __name__=="__main__":
 	debug = False
 	try:

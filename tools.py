@@ -20,6 +20,28 @@ class Tools():
 		ret = p.wait()
 		return ret == 0
 
+	def mkfile(self, filename, size=0):
+		file = open(filename, "w")
+		if not file:
+			return False
+		file.truncate(size)
+		file.close()
+		return True
+
+	def txt2size(self, txtsize):
+		dec = txtsize[-1]
+		try:
+			if dec == "k":
+				return int(txtsize[:-1]) * 1024
+			if dec == "M":
+				return int(txtsize[:-1]) * 1024 * 1024
+			if dec == "G":
+				return int(txtsize[:-1]) * 1024 * 1024 * 1024
+			return int(txtsize)
+		except ValueError:
+			pass
+		return 0
+
 	def ismount(self, mp):
 		if not os.path.exists(mp):
 			return 0
@@ -28,7 +50,7 @@ class Tools():
 		output = p.communicate()[0]
 		ret = output.startswith(mp)
 		return ret
-		
+
 	def mount(self, device, mp, fstype=None, options=None):
 		cmd=["mount"]
 		if fstype:
