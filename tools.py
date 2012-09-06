@@ -45,10 +45,10 @@ class Tools():
 	def ismount(self, mp):
 		if not os.path.exists(mp):
 			return 0
-		p = subprocess.Popen(("stat", "--format", "%m", mp),
+		p = subprocess.Popen(("df", "-P", mp),
 			stdout=subprocess.PIPE)
 		output = p.communicate()[0]
-		ret = output.startswith(mp)
+		ret = output.endswith(mp)
 		return ret
 
 	def mount(self, device, mp, fstype=None, options=None):
