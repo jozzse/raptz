@@ -47,8 +47,10 @@ class Tools():
 			return 0
 		p = subprocess.Popen(("df", "-P", mp),
 			stdout=subprocess.PIPE)
-		output = p.communicate()[0]
+		output = p.communicate()[0].strip()
+		print output
 		ret = output.endswith(mp)
+		print ret
 		return ret
 
 	def mount(self, device, mp, fstype=None, options=None):
