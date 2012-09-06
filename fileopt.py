@@ -44,12 +44,13 @@ class FileOpt():
 		self.ui.stop()
 		
 
-	def mk_jffs2(self, inpath, jffs2file):
+	def mk_jffs2(self, inpath, jffs2file, jffs2ext=""):
 		self.ui.start(jffs2file + "(jffs2)")
+		self.ui.line("Creating " + jffs2file + " Ext:" + jffs2ext)
 		self.tools.run("mkfs.jffs2", 
 			"-r", inpath,
 			"-l", "-n" ,"-e", "128",
-			"-v", "-o", jffs2file)
+			"-o", jffs2file, *jffs2ext.split())
 		self.ui.stop()
 
 	def mk_ext3(self, inpath, ext3file, mkfs, extargs="", cpiofile=""):

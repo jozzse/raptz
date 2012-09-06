@@ -153,7 +153,7 @@ class Raptz():
 	def image(self):
 		fo = fileopt.FileOpt(self.tools, self.ui)
 		if self.args.jffs2:
-			fo.mk_jffs2(self.args.path, self.args.jffs2)
+			fo.mk_jffs2(self.args.path, self.args.jffs2, self.args.jffs2ext)
 		if self.args.cpio:
 			fo.mk_cpio(self.args.path, self.args.cpio)
 		if self.args.ext3:
@@ -198,6 +198,7 @@ class Raptz():
 		
 		cmd = self.args.AddCmd("image", self.image, "Create image from a sysroot");
 		cmd.AddArg("jffs2", "j", "", "Create jffs2 image")
+		cmd.AddArg("jffs2ext", None, "", "Add extra commands to jffs2 within \"'s") # FIXME: we should be able to replace commands
 		cmd.AddArg("cpio", "c", "", "Create cpio image")
 		cmd.AddArg("ext3", "e", "", "Create ext3 image")
 		cmd.AddArg("size", "s", "256M", "Specify image size if size can be specified (ext3). (postfix with k, M and G avalible)")
