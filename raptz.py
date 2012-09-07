@@ -23,24 +23,30 @@ exit 101
 DEF_NAME="/opt/<name>"
 
 class RaptzError(Exception):
+	""" Exception class for Raptz internal Errors """
 	def __init__(self, text):
 		self.text = text
 	def __str__(self):
 		return self.text
 
 class Raptz(conf.Conf):
+	""" The raptz base class. 
+	FIXME: Move none subcommand functions from this class
+	"""
 	def mount(self):
+		""" Mount chroot needed filesystems """
 		self.tools.mount("none", self.sysrootPath("proc"), fstype="proc")
 		#tools.mount("/dev", os.path.join(self.args.path, "dev"), options="bind")
 		#tools.mount("/dev/pts", os.path.join(self.args.path, "dev/pts"), options="bind")
 
 	def umount(self):
+		""" UnMount chroot needed filesystems """
 		#tools.umount(os.path.join(self.args.path, "dev/pts"))
 		#tools.umount(os.path.join(self.args.path, "dev"))
 		self.tools.umount(self.sysrootPath("proc"))
 		
 	def chroot(self, *cmd):
-
+		""" Run Arm Chroot """
 		ret = True
 		# Setup needed filenames
 		sr_rcdfile = self.sysrootPath("usr/sbin/policy-rc.d")
@@ -98,6 +104,7 @@ class Raptz(conf.Conf):
 
 	def multistrap(self):
 		""" Will multistrap and copy extra root files from the root configuration structure """
+		# First run multistrap
 		self.ui.start("Multistrap")
 		msfile =  self.confName("multistrap.cfg")
 		if not msfile:
@@ -114,11 +121,13 @@ class Raptz(conf.Conf):
 
 	def configure(self):
 		""" Copy and run configuration system """
+		# init scripts to run
 		runfiles = ("init.sh",)
 		if self.args.dev:
 			runfiles = ("init.sh", "init.dev.sh")
 
 		self.ui.start("Configure")
+		# Run configurations in sorted order 
 		conflist = sorted(self.confLs("conf"), key=lambda sec: sec[1])
 		for item in conflist:
 			tmpdir = tempfile.mkdtemp(dir=self.sysrootPath("tmp"))
@@ -139,6 +148,9 @@ class Raptz(conf.Conf):
 		self.ui.stop()
 
 	def mksys(self):
+		""" Create a system
+		That is multistrap and configure.
+		"""
 		# Make sure we are unmounted
 		self.ui.start(self.Name())
 		self.umount() 
@@ -154,6 +166,7 @@ class Raptz(conf.Conf):
 		self.ui.message("Sysroot in %s size is %d MB" % (self.sysrootPath(), self.tools.dirsize(self.sysrootPath()) / 1024))
 
 	def image(self):
+		""" Create a image of selected type """
 		fo = fileopt.FileOpt(self.tools, self.ui)
 		if self.args.jffs2:
 			fo.mk_jffs2(self.sysrootPath(), self.args.jffs2, self.args.jffs2ext)
@@ -167,6 +180,7 @@ class Raptz(conf.Conf):
 			self.ui.stop()
 		
 	def mkdev(self):
+		""" Fill a device with sysroot """
 		if not self.args.device:
 			print "No device specified"
 			exit(1)
@@ -185,10 +199,15 @@ class Raptz(conf.Conf):
 		fo.mk_ext3(self.sysrootPath(), self.args.device, self.args.mkfs, "", self.args.cpio)
 
 	def config(self):
+		""" Ugly extra configuration if needed """
 		if self.args.resolv_conf:
 			print "/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf"
 			shutil.copy2("/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf")
+
 	def __init__(self):
+		""" Setup args and parse. 
+		FIXME: Move to caller
+		"""
 		self.args = rargs.Rargs("Raptz sysroot handler")
 		self.args.AddArg("name", "n", "default", "Configuration Name")
 			
@@ -246,7 +265,9 @@ class Raptz(conf.Conf):
 		self.tools = Tools(self.ui)
 
 	def start(self):
-		if self.args.help or self.argv == None:
+		""" Run configuration script 
+		"""
+		if self.argv == None:
 			return True
 		return self.args.Func()
 

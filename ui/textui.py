@@ -63,9 +63,9 @@ class Group():
 		self.time = t
 		print "\r\033[K",
 		if not self.lines:
-			print "".join([animate(), pre, self.label, ": ", str(self.cline) , " lines"]),
+			print "".join(["Curr: ", pre, self.label, ": ", str(self.cline) , " lines", animate()]),
 		else:
-			print "".join([animate(), pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%"]),
+			print "".join(["Curr: ", pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%", animate()]),
 		sys.stdout.flush()	
 
 	def done(self, pre=""):
