@@ -31,6 +31,13 @@ class Conf():
 				return filename
 		return None
 	
+	def __inlist(self, name, lst):
+		""" Return true if name is in dirlist [x, "name" ] item """
+		for item in lst:
+			if item[1] == name:
+				return True
+		return False
+
 	def confLs(self, path):
 		if not path:
 			return None
@@ -40,7 +47,8 @@ class Conf():
 			if not os.path.isdir(basepath):
 				continue
 			for item in os.listdir(basepath):
-				f.append((os.path.join(basepath, item), item))
+				if not self.__inlist(item, f):
+					f.append((os.path.join(basepath, item), item))
 		return f
 
 	def confTree(self, path, topdown=False):
@@ -59,10 +67,14 @@ class Conf():
 			for root, dirs, files in os.walk(basepath, topdown=topdown):
 				for filename in files:
 					filepath = os.path.join(root, filename)
-					f.append((filepath, filepath[len(basepath)+1:]))
+					topath = filepath[len(basepath)+1:]
+					if not self.__inlist(topath, f):
+						f.append((filepath, topath))
 				for dirname in dirs:
 					dirpath = os.path.join(root, dirname)
-					f.append((dirpath, dirpath[len(basepath)+1:]))
+					topath = dirpath[len(basepath)+1:]
+					if not self.__inlist(topath, f):
+						f.append((dirpath, topath))
 		if not topdown:
 			f.append((None, ""))
 		return f
