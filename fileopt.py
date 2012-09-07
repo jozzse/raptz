@@ -66,7 +66,7 @@ class FileOpt():
 		
 		mp = tempfile.mkdtemp(dir="/tmp")
 		self.ui.start("Mount(" + mp + ")")
-		self.tools.mount(ext3file, mp)
+		self.tools.mount(ext3file, mp, options="loop")
 		self.ui.stop()
 		
 		if cpiofile:
