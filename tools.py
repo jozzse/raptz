@@ -121,7 +121,22 @@ class Tools():
 			else:
 				self.ui.line(" ".join(["file", src, dst]))
 				shutil.copy2(src, dst)
-		
+	
+	def CopyList(self, lst):
+		if lst[0][0] != None:
+			return False # Not topdown
+		self.ui.start("Copy Tree to " + lst[0][1])
+		for (frm, to) in lst[1:]:
+			if os.path.isdir(frm):
+					self.ui.line(" ".join(["dir ", frm, to]))
+					if not os.path.isdir(to):
+						os.mkdir(to)
+			else:
+				self.ui.line(" ".join(["file", frm, to]))
+				shutil.copy2(frm, to)
+		self.ui.stop()
+		return True
+
 	def rmtree(self, path):
 		""" Remove complete path from filesystem """
 		self.ui.start("rmtree("+path+")")

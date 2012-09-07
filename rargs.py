@@ -155,18 +155,17 @@ class Rargs(RargsArgs):
 
 	def Parse(self, args):
 		if not args or not len(args):
-			print "No subcommand"
-			print ""
 			print self.GetHelp()
-			exit(1)
+			return None
 		if args[0] == "--help" or args[0] == "-h":
 			print self.GetHelp()
-			exit(1)
+			return None
 		if not args[0] in self.__cmds:
 			print "Subcommand \"" + args[0] + "\" Not found"
 			print ""
 			print self.GetHelp()
-			exit(1)
+			return None
+
 		self.__command = self.__cmds[args[0]]
 		del args[0]
 		args = RargsArgs.Parse(self, args)

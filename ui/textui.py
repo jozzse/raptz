@@ -68,14 +68,14 @@ class Group():
 			print "".join([animate(), pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%"]),
 		sys.stdout.flush()	
 
-	def done(self):
+	def done(self, pre=""):
 		"""
 		Removes the top most child. If a child returns True it wants to be removed
 		"""
 		if not self.child:
-			print "\r\033[K", self.label, "Done ", self.cline, " lines"
+			print "\r\033[K", "Done:", pre + self.label, self.cline, " lines"
 			return True
-		if self.child.done():
+		if self.child.done(pre + self.label + ":"):
 			self.child = None
 		return False
 

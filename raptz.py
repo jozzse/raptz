@@ -2,6 +2,7 @@
 
 # BSD New Licence (c) 2012 Jonas Zetterberg
 
+import conf
 import time
 import tempfile
 import fileopt
@@ -27,25 +28,25 @@ class RaptzError(Exception):
 	def __str__(self):
 		return self.text
 
-class Raptz():
+class Raptz(conf.Conf):
 	def mount(self):
-		self.tools.mount("none", os.path.join(self.args.path, "proc"), fstype="proc")
+		self.tools.mount("none", self.sysrootPath("proc"), fstype="proc")
 		#tools.mount("/dev", os.path.join(self.args.path, "dev"), options="bind")
 		#tools.mount("/dev/pts", os.path.join(self.args.path, "dev/pts"), options="bind")
 
 	def umount(self):
 		#tools.umount(os.path.join(self.args.path, "dev/pts"))
 		#tools.umount(os.path.join(self.args.path, "dev"))
-		self.tools.umount(os.path.join(self.args.path, "proc"))
+		self.tools.umount(self.sysrootPath("proc"))
 		
 	def chroot(self, *cmd):
 
 		ret = True
 		# Setup needed filenames
-		sr_rcdfile = os.path.join(self.args.path, "usr/sbin/policy-rc.d")
-		sr_qemufile = os.path.join(self.args.path, "usr/bin/qemu-arm-static")
+		sr_rcdfile = self.sysrootPath("usr/sbin/policy-rc.d")
+		sr_qemufile = self.sysrootPath("usr/bin/qemu-arm-static")
 		lo_qemufile = "/usr/bin/qemu-arm-static"
-		sr_linuxsofile = os.path.join(self.args.path, "/lib/ld-linux.so.3")
+		sr_linuxsofile = self.sysrootPath("/lib/ld-linux.so.3")
 		lo_linuxsofile = u"/lib/ld-linux.so.3"
 		
 		# Prepare from lost previous commands
@@ -81,10 +82,10 @@ class Raptz():
 		# Do the actuall chroot
 		if len(cmd) == 0:
 			# Invokation from commandline
-			ret = subprocess.call(["chroot", self.args.path] + self.argv)
+			ret = subprocess.call(["chroot", self.sysrootPath()] + self.argv)
 		else:
 			# Invokation from command
-			ret = self.tools.run("chroot", self.args.path, *cmd)
+			ret = self.tools.run("chroot", self.sysrootPath(), *cmd)
 
 		# Unmount
 		self.umount()
@@ -97,70 +98,72 @@ class Raptz():
 
 	def multistrap(self):
 		""" Will multistrap and copy extra root files from the root configuration structure """
-		file_multistrap = os.path.join(self.args.name, "multistrap.cfg")
-		# Do multistrap
 		self.ui.start("Multistrap")
-		if not os.path.exists(file_multistrap):
-			raise RaptzError("Could not find multistrap file \"" + file_multistrap + "\"")
-		if not self.tools.run("multistrap", '-f', file_multistrap, '-d', self.args.path):
+		msfile =  self.confName("multistrap.cfg")
+		if not msfile:
+			raise RaptzError("Could not find multistrap file.")
+		# Do multistrap
+		if not self.tools.run("multistrap", '-f', msfile, '-d', self.sysrootPath()):
 			raise RaptzError("Multistrapping failed")
+		self.ui.stop()
+
 		# Copy root filesystem
-		self.ui.start("Preparing")
-		self.tools.copydir(os.path.join(self.args.name, "root/"), self.args.path)
-		self.ui.stop()
-		self.ui.stop()
+		tree = self.confTree("root", True)
+		tree = [ ( x[0], self.sysrootPath(x[1])) for x in tree ]
+		self.tools.CopyList(tree)
 
 	def configure(self):
 		""" Copy and run configuration system """
+		runfiles = ("init.sh",)
+		if self.args.dev:
+			runfiles = ("init.sh", "init.dev.sh")
+
 		self.ui.start("Configure")
-		bdir = os.path.join(self.args.name, "conf")
-		tdir = tempfile.mkdtemp(dir=os.path.join(self.args.path, "tmp"))
-		localtdir = tdir[len(self.args.path):]
-		for item in sorted(os.listdir(bdir)):
-			cdir = os.path.join(bdir, item)
-			if os.path.isfile(os.path.join(cdir, "init.sh")):
-				self.ui.start(item)
-				shutil.rmtree(tdir)
-				self.tools.copydir(cdir, tdir)
-				self.ui.start("Config")
-				if not self.chroot("/bin/bash", os.path.join(localtdir, "init.sh"), localtdir):
-					raise RaptzError("init.sh arm chroot failure for configuration " + item)
+		conflist = sorted(self.confLs("conf"), key=lambda sec: sec[1])
+		for item in conflist:
+			tmpdir = tempfile.mkdtemp(dir=self.sysrootPath("tmp"))
+			self.ui.start(item[1])
+			confdir = self.confTree(os.path.join("conf", item[1]), True)
+			confdir = [(x[0], os.path.join(tmpdir, x[1])) for x in confdir]
+			self.tools.CopyList(confdir)
+			for ifile in runfiles:
+				runfile = os.path.join(tmpdir, ifile)
+				if not os.path.isfile(runfile):
+					continue
+				self.ui.start(ifile)
+				if not self.chroot("/bin/bash", self.chrootPath(runfile), self.chrootPath(tmpdir)):
+					raise RaptzError("Failed to execute " + runfile + " for config " + item)
 				self.ui.stop()
-				if self.args.dev==True and os.path.isfile(os.path.join(tdir, "init.dev.sh")):
-					self.ui.start("DevConfig")
-					if not self.chroot("/bin/bash", os.path.join(localtdir, "init.dev.sh"), localtdir):
-						raise RaptzError("init.dev.sh arm chroot failure for configuration " + item)
-					self.ui.stop()
-				self.ui.stop()
-		shutil.rmtree(tdir)
+			shutil.rmtree(tmpdir)
+			self.ui.stop()
 		self.ui.stop()
 
 	def mksys(self):
 		# Make sure we are unmounted
-		self.ui.start(self.args.name)
+		self.ui.start(self.Name())
 		self.umount() 
 
-		if self.args.clean and os.path.isdir(self.args.path):
+		if self.args.clean and os.path.isdir(self.sysrootPath()):
 			# Remove files
-			self.tools.rmtree(self.args.path)
+			self.tools.rmtree(self.sysrootPath())
 
 		self.multistrap()
 		self.configure()
 		
 		self.ui.stop()
-		self.ui.message("Sysroot in %s size is %d MB" % (self.args.path ,self.tools.dirsize(self.args.path) / 1024))
+		self.ui.message("Sysroot in %s size is %d MB" % (self.sysrootPath(), self.tools.dirsize(self.sysrootPath()) / 1024))
 
 	def image(self):
 		fo = fileopt.FileOpt(self.tools, self.ui)
 		if self.args.jffs2:
-			fo.mk_jffs2(self.args.path, self.args.jffs2, self.args.jffs2ext)
+			fo.mk_jffs2(self.sysrootPath(), self.args.jffs2, self.args.jffs2ext)
 		if self.args.cpio:
-			fo.mk_cpio(self.args.path, self.args.cpio)
+			fo.mk_cpio(self.sysrootPath(), self.args.cpio)
 		if self.args.ext3:
 			size = self.tools.txt2size(self.args.size)
 			self.ui.start("Make " + self.args.ext3 + " (ext3 " + str(size) + " Bytes)")
 			self.tools.mkfile(self.args.ext3, self.tools.txt2size(self.args.size))
-			fo.mk_ext3(self.args.path, os.path.abspath(self.args.ext3), True, "-F", self.args.cpio)
+			fo.mk_ext3(self.sysrootPath(), os.path.abspath(self.args.ext3), True, "-F", self.args.cpio)
 			self.ui.stop()
 		
 	def mkdev(self):
@@ -179,7 +182,7 @@ class Raptz():
 			print "Not a removable device"
 			exit(1)
 		fo = fileopt.FileOpt(self.tools, self.ui)
-		fo.mk_ext3(self.args.path, self.args.device, self.args.mkfs, "", self.args.cpio)
+		fo.mk_ext3(self.sysrootPath(), self.args.device, self.args.mkfs, "", self.args.cpio)
 
 	def config(self):
 		if self.args.resolv_conf:
@@ -218,8 +221,8 @@ class Raptz():
 		self.args.AddArg("logfile", "l", "raptz.log", "Set logfile")
 		
 		self.argv = self.args.Parse(sys.argv[1:])
-		
-		if self.args.help:
+			
+		if self.args.help or self.argv == None:
 			return
 
 	
@@ -238,10 +241,13 @@ class Raptz():
 			if os.path.islink(self.args.name):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
 				
+		conf.Conf.__init__(self, self.args.name, self.args.path)
 		self.ui = ui.get(self.args.ui)(self.args.logfile)
 		self.tools = Tools(self.ui)
 
 	def start(self):
+		if self.args.help or self.argv == None:
+			return True
 		return self.args.Func()
 
 if __name__=="__main__":

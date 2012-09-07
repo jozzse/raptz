@@ -12,6 +12,8 @@ class FileOpt():
 		self.ui = ui
 
 	def mk_cpio(self, inpath, cpiofile):
+		if inpath.endswith("/"):
+			inpath = inpath[:-1]
 		files = self.tools.files(inpath, topdown=True)
 		self.ui.start("Make " + cpiofile + "(cpio)", len(files))
 		l = len(inpath)
@@ -49,7 +51,7 @@ class FileOpt():
 		self.ui.line("Creating " + jffs2file + " Ext:" + jffs2ext)
 		self.tools.run("mkfs.jffs2", 
 			"-r", inpath,
-			"-l", "-n" ,"-e", "128",
+			"-p", "-l", "-n" ,"-e", "128",
 			"-o", jffs2file, *jffs2ext.split())
 		self.ui.stop()
 
