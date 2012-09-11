@@ -41,8 +41,8 @@ class FileOpt():
 			stdin=fd)
 		while p.poll() == None:
 			self.ui.line(p.stdout.readline())
-		p.wait()
 		fd.close()
+		p.wait()
 		self.ui.stop()
 		
 
