@@ -281,6 +281,7 @@ if __name__=="__main__":
 		print ""
 		print ""
 		print "Failed to create sysroot: " + str(why)
+		exit(1)
 	except KeyboardInterrupt:
 		print ""
 		print ""
@@ -291,11 +292,13 @@ if __name__=="__main__":
 		print "Got Base exception ", repr(why), ". Installation failed."
 		if debug:
 			raise
+		exit(1)
 	except Exception, why:
 		print ""
 		print ""
 		print "Got exception", repr(why), ". Installation failed."
 		if debug:
 			raise
+		exit(1)
 
 print ""

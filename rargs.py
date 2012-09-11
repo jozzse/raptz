@@ -164,7 +164,7 @@ class Rargs(RargsArgs):
 			print "Subcommand \"" + args[0] + "\" Not found"
 			print ""
 			print self.GetHelp()
-			return None
+			exit(1)
 
 		self.__command = self.__cmds[args[0]]
 		del args[0]
