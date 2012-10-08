@@ -172,13 +172,20 @@ class Raptz(conf.Conf):
 			fo.mk_jffs2(self.sysrootPath(), self.args.jffs2, self.args.jffs2ext)
 		if self.args.cpio:
 			fo.mk_cpio(self.sysrootPath(), self.args.cpio)
+		if self.args.tar:
+			fo.mk_targz(self.sysrootPath(), self.args.tar)
 		if self.args.ext3:
 			size = self.tools.txt2size(self.args.size)
 			self.ui.start("Make " + self.args.ext3 + " (ext3 " + str(size) + " Bytes)")
 			self.tools.mkfile(self.args.ext3, self.tools.txt2size(self.args.size))
 			fo.mk_ext3(self.sysrootPath(), os.path.abspath(self.args.ext3), True, "-F", self.args.cpio)
 			self.ui.stop()
-		
+	def extract(self):
+		""" Extract a image of selected type """
+		fo = fileopt.FileOpt(self.tools, self.ui)
+		if self.args.tar:
+			fo.ext_targz(self.args.tar, self.sysrootPath())
+
 	def mkdev(self):
 		""" Fill a device with sysroot """
 		if not self.args.device:
@@ -222,8 +229,12 @@ class Raptz(conf.Conf):
 		cmd.AddArg("jffs2", "j", "", "Create jffs2 image")
 		cmd.AddArg("jffs2ext", None, "", "Add extra commands to jffs2 within \"'s") # FIXME: we should be able to replace commands
 		cmd.AddArg("cpio", "c", "", "Create cpio image")
+		cmd.AddArg("tar", "t", "", "Create tar.gz image")
 		cmd.AddArg("ext3", "e", "", "Create ext3 image")
 		cmd.AddArg("size", "s", "256M", "Specify image size if size can be specified (ext3). (postfix with k, M and G avalible)")
+
+		cmd = self.args.AddCmd("extract", self.extract, "Extract sysroot image")
+		cmd.AddArg("tar", "t", "", "Extract tar.gz image")
 
 		cmd = self.args.AddCmd("mkdev", self.mkdev, "Make block device root fs from rootfs")
 		cmd.AddArg("device", "d", "", "Move sysroot to ext3 filesystem on block device")

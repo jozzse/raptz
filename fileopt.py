@@ -30,7 +30,7 @@ class FileOpt():
 		p.stdin.close()
 		p.wait()
 		self.ui.stop()
-	
+
 	def ext_cpio(self, cpiofile, outpath):
 		self.ui.start("Exctract " + cpiofile + "(cpio)")
 		fd=open(cpiofile, "rb")
@@ -44,7 +44,42 @@ class FileOpt():
 		fd.close()
 		p.wait()
 		self.ui.stop()
-		
+	
+	def mk_targz(self, inpath, tarfile):
+		files = self.tools.files(inpath, topdown=True)
+		self.ui.start("Make " + tarfile + "(tar.gz)", len(files))
+		p = subprocess.Popen(["tar", 
+				"-c",
+				"-v",
+				"-C", inpath,
+				"-z", 
+				"-f", tarfile,
+				"."],
+			stdout=subprocess.PIPE)
+		while p.poll() == None:
+			self.ui.line(p.stdout.readline())
+		p.wait()
+		self.ui.stop()
+	
+	def ext_targz(self, tarfile, outpath):
+		self.ui.start("Extract " + tarfile + "(tar.gz)")
+		if not os.path.isdir(outpath):
+			if not os.mkdir(outpath):
+				self.ui.message("Could not create " + outpath)
+				self.ui.stop()
+				return False
+		p = subprocess.Popen(["tar", 
+				"-x",
+				"-v",
+				"-C", outpath,
+				"-z",
+				"-f", tarfile],
+			stdout=subprocess.PIPE)
+		while p.poll() == None:
+			self.ui.line(p.stdout.readline())
+		p.wait()
+		self.ui.stop()
+		return True
 
 	def mk_jffs2(self, inpath, jffs2file, jffs2ext=""):
 		self.ui.start(jffs2file + "(jffs2)")
