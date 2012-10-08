@@ -178,8 +178,9 @@ class Raptz(conf.Conf):
 			size = self.tools.txt2size(self.args.size)
 			self.ui.start("Make " + self.args.ext3 + " (ext3 " + str(size) + " Bytes)")
 			self.tools.mkfile(self.args.ext3, self.tools.txt2size(self.args.size))
-			fo.mk_ext3(self.sysrootPath(), os.path.abspath(self.args.ext3), True, "-F", self.args.cpio)
+			fo.mk_ext3(self.sysrootPath(), os.path.abspath(self.args.ext3), True, "-F")
 			self.ui.stop()
+
 	def extract(self):
 		""" Extract a image of selected type """
 		fo = fileopt.FileOpt(self.tools, self.ui)
@@ -205,7 +206,7 @@ class Raptz(conf.Conf):
 			print "Not a removable device"
 			exit(1)
 		fo = fileopt.FileOpt(self.tools, self.ui)
-		fo.mk_ext3(self.sysrootPath(), self.args.device, self.args.mkfs, "", self.args.cpio)
+		fo.mk_ext3(self.sysrootPath(), self.args.device, self.args.mkfs, "")
 
 	def config(self):
 		""" Ugly extra configuration if needed """
@@ -242,7 +243,6 @@ class Raptz(conf.Conf):
 		cmd = self.args.AddCmd("mkdev", self.mkdev, "Make block device root fs from rootfs")
 		cmd.AddArg("device", "d", "", "Move sysroot to ext3 filesystem on block device")
 		cmd.AddArg("mkfs", "m", hlp="Create ext3 filesystem on --device device")
-		cmd.AddArg("cpio", "c", "", hlp="Use this CPIO file instead of sysroot")
 
 		cmd = self.args.AddCmd("config", self.config, "Change certain part of configuration")
 		cmd.AddArg("resolv-conf", "r", hlp="Copy host system resolv.conf to configuration")

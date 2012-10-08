@@ -98,7 +98,7 @@ class FileOpt():
 			"-o", jffs2file, *jffs2ext.split())
 		self.ui.stop()
 
-	def mk_ext3(self, inpath, ext3file, mkfs, extargs="", cpiofile=""):
+	def mk_ext3(self, inpath, ext3file, mkfs, extargs=""):
 		files = self.tools.files(inpath, topdown=True)
 		if mkfs:
 			self.ui.start("Mkfs")
@@ -111,29 +111,28 @@ class FileOpt():
 		self.ui.start("Mount(" + mp + ")")
 		self.tools.mount(ext3file, mp, options="loop")
 		self.ui.stop()
+		self.ui.start("Move system", len(files))
+		psrc = subprocess.Popen(["tar", 
+				"-c",
+				"-C", inpath,
+				"-z", 
+				"-f", "-",
+				"."],
+			stdout=subprocess.PIPE)
+		pdst = subprocess.Popen(["tar", 
+				"-x",
+				"-v",
+				"-C", mp,
+				"-z",
+				"-f", "-"],
+			stdin=psrc.stdout,
+			stdout=subprocess.PIPE)
+		while pdst.poll() == None:
+			self.ui.line(pdst.stdout.readline())
+		psrc.wait()
+		pdst.wait()
+		self.ui.stop()
 		
-		if cpiofile:
-			try:
-				self.ext_cpio(cpiofile, mp);
-			except:
-				print "Exception!"
-				print "Trying to unmount", mp, " (this might take a while)"
-				self.tools.umount(mp)
-				raise
-		else:			
-			tmpfile = tempfile.mktemp()
-			try:
-				self.mk_cpio(inpath, tmpfile)
-				self.ext_cpio(tmpfile, mp);
-			except:
-				print "Exception!"
-				print "Trying to remove tmpfile", tmpfile
-				os.unlink(tmpfile)
-				print "Trying to unmount", mp, " (this might take a while)"
-				self.tools.umount(mp)
-				raise
-			os.unlink(tmpfile)
-			
 		self.ui.start("Umount(" + mp + ")")
 		self.tools.umount(mp)
 		self.ui.stop()
