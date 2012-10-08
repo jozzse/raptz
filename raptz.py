@@ -183,6 +183,8 @@ class Raptz(conf.Conf):
 	def extract(self):
 		""" Extract a image of selected type """
 		fo = fileopt.FileOpt(self.tools, self.ui)
+		if self.args.cpio:
+			fo.ext_cpio(self.args.cpio, self.sysrootPath())
 		if self.args.tar:
 			fo.ext_targz(self.args.tar, self.sysrootPath())
 
@@ -235,6 +237,7 @@ class Raptz(conf.Conf):
 
 		cmd = self.args.AddCmd("extract", self.extract, "Extract sysroot image")
 		cmd.AddArg("tar", "t", "", "Extract tar.gz image")
+		cmd.AddArg("cpio", "c", "", "Extract cpio image")
 
 		cmd = self.args.AddCmd("mkdev", self.mkdev, "Make block device root fs from rootfs")
 		cmd.AddArg("device", "d", "", "Move sysroot to ext3 filesystem on block device")

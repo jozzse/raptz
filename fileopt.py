@@ -33,6 +33,12 @@ class FileOpt():
 
 	def ext_cpio(self, cpiofile, outpath):
 		self.ui.start("Exctract " + cpiofile + "(cpio)")
+		if not os.path.isdir(outpath):
+			os.mkdir(outpath)
+			if not os.path.isdir(outpath):
+				self.ui.message("Could not create " + outpath)
+				self.ui.stop()
+				return False
 		fd=open(cpiofile, "rb")
 		p = subprocess.Popen(["cpio", "--verbose", "-i"],
 			cwd=outpath,
@@ -44,7 +50,8 @@ class FileOpt():
 		fd.close()
 		p.wait()
 		self.ui.stop()
-	
+		return True
+
 	def mk_targz(self, inpath, tarfile):
 		files = self.tools.files(inpath, topdown=True)
 		self.ui.start("Make " + tarfile + "(tar.gz)", len(files))
@@ -64,7 +71,8 @@ class FileOpt():
 	def ext_targz(self, tarfile, outpath):
 		self.ui.start("Extract " + tarfile + "(tar.gz)")
 		if not os.path.isdir(outpath):
-			if not os.mkdir(outpath):
+			os.mkdir(outpath)
+			if not os.path.isdir(outpath):
 				self.ui.message("Could not create " + outpath)
 				self.ui.stop()
 				return False
