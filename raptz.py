@@ -43,7 +43,7 @@ class Raptz(conf.Conf):
 		""" UnMount chroot needed filesystems """
 		#tools.umount(os.path.join(self.args.path, "dev/pts"))
 		#tools.umount(os.path.join(self.args.path, "dev"))
-		self.tools.umount(self.sysrootPath("proc"))
+		return self.tools.umount(self.sysrootPath("proc"))
 		
 	def chroot(self, *cmd):
 		""" Run Arm Chroot """
@@ -87,19 +87,28 @@ class Raptz(conf.Conf):
 		
 		# Do the actuall chroot
 		if len(cmd) == 0:
-			# Invokation from commandline
-			ret = subprocess.call(["chroot", self.sysrootPath()] + self.argv)
+			# recombind args at ;
+			cmds = " ".join(self.argv).split(";")
+			for cmd in cmds:
+				# Invokation from commandline
+				run = cmd.strip().split(" ")
+				if run == ['']:
+					run = ["bash"]
+				# resplit each command at " "
+				ret = subprocess.call(["chroot", self.sysrootPath()] + run)
 		else:
+			print "CMD : " + cmd
 			# Invokation from command
 			ret = self.tools.run("chroot", self.sysrootPath(), *cmd)
-
-		# Unmount
-		self.umount()
 
 		# Unlink
 		#os.unlink(lo_linuxsofile)
 		os.unlink(sr_qemufile)
 		os.unlink(sr_rcdfile)
+		
+		# Unmount
+		if not self.umount():
+			ret = 1;
 		return ret
 
 	def multistrap(self):
