@@ -21,5 +21,5 @@ def get(uidef):
 	if uidef=="text":
 		from textui import UI
 		return UI
-			
+
 	raise

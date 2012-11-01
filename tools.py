@@ -10,7 +10,7 @@ class Tools():
 		self.ui = ui
 
 	def run(self, *command):
-		p = subprocess.Popen(command, 
+		p = subprocess.Popen(command,
 			stderr=subprocess.STDOUT,
 			stdout=subprocess.PIPE)
 		line = "."
@@ -88,7 +88,7 @@ class Tools():
 		if not topdown:
 			f.append(path)
 		return f
-	
+
 	def dirs(self, path):
 		""" Get list of dirs """
 		f = []
@@ -97,15 +97,15 @@ class Tools():
 				f.append(os.path.join(root, dirname))
 		f.append(path)
 		return f
-	
-		
+
+
 	def copydir(self, frm, to):
 		""" Copy path frm to path to (like cp -r) """
 		if frm.endswith("/"):
 			frm = frm[:-1]
 		if not to.endswith("/"):
 			to = to + "/"
-		
+
 		files = self.files(frm, topdown=True)
 		self.ui.set_lines(len(files))
 
@@ -121,7 +121,7 @@ class Tools():
 			else:
 				self.ui.line(" ".join(["file", src, dst]))
 				shutil.copy2(src, dst)
-	
+
 	def CopyList(self, lst):
 		if lst[0][0] != None:
 			return False # Not topdown
@@ -155,5 +155,3 @@ class Tools():
 				print f
 				raise
 		self.ui.stop()
-		
-	

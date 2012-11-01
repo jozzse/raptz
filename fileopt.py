@@ -19,7 +19,7 @@ class FileOpt():
 		l = len(inpath)
 		f = ["".join([".", fl[l:], "\n"]) for fl in files]
 		fd=open(cpiofile, "wb", 0644)
-		p = subprocess.Popen(["cpio", "-o"], 
+		p = subprocess.Popen(["cpio", "-o"],
 			cwd=inpath,
 		    stdin=subprocess.PIPE,
 			stderr=subprocess.PIPE,
@@ -55,11 +55,11 @@ class FileOpt():
 	def mk_targz(self, inpath, tarfile):
 		files = self.tools.files(inpath, topdown=True)
 		self.ui.start("Make " + tarfile + "(tar.gz)", len(files))
-		p = subprocess.Popen(["tar", 
+		p = subprocess.Popen(["tar",
 				"-c",
 				"-v",
 				"-C", inpath,
-				"-z", 
+				"-z",
 				"-f", tarfile,
 				"."],
 			stdout=subprocess.PIPE)
@@ -67,7 +67,7 @@ class FileOpt():
 			self.ui.line(p.stdout.readline())
 		p.wait()
 		self.ui.stop()
-	
+
 	def ext_targz(self, tarfile, outpath):
 		self.ui.start("Extract " + tarfile + "(tar.gz)")
 		if not os.path.isdir(outpath):
@@ -76,7 +76,7 @@ class FileOpt():
 				self.ui.message("Could not create " + outpath)
 				self.ui.stop()
 				return False
-		p = subprocess.Popen(["tar", 
+		p = subprocess.Popen(["tar",
 				"-x",
 				"-v",
 				"-C", outpath,
@@ -92,7 +92,7 @@ class FileOpt():
 	def mk_jffs2(self, inpath, jffs2file, jffs2ext=""):
 		self.ui.start(jffs2file + "(jffs2)")
 		self.ui.line("Creating " + jffs2file + " Ext:" + jffs2ext)
-		self.tools.run("mkfs.jffs2", 
+		self.tools.run("mkfs.jffs2",
 			"-r", inpath,
 			"-p", "-l", "-n" ,"-e", "128",
 			"-o", jffs2file, *jffs2ext.split())
@@ -106,20 +106,20 @@ class FileOpt():
 				print "Could not create ext3"
 				return False
 			self.ui.stop()
-		
+
 		mp = tempfile.mkdtemp(dir="/tmp")
 		self.ui.start("Mount(" + mp + ")")
 		self.tools.mount(ext3file, mp, options="loop")
 		self.ui.stop()
 		self.ui.start("Move system", len(files))
-		psrc = subprocess.Popen(["tar", 
+		psrc = subprocess.Popen(["tar",
 				"-c",
 				"-C", inpath,
-				"-z", 
+				"-z",
 				"-f", "-",
 				"."],
 			stdout=subprocess.PIPE)
-		pdst = subprocess.Popen(["tar", 
+		pdst = subprocess.Popen(["tar",
 				"-x",
 				"-v",
 				"-C", mp,
@@ -132,10 +132,8 @@ class FileOpt():
 		psrc.wait()
 		pdst.wait()
 		self.ui.stop()
-		
+
 		self.ui.start("Umount(" + mp + ")")
 		self.tools.umount(mp)
 		self.ui.stop()
 		return True
-
-

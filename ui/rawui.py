@@ -12,7 +12,7 @@ class UI(BaseUI):
 			print "(" + str(lines) + " lines)"
 		else:
 			print ""
-		
+
 	def stop(self):
 		BaseUI.stop(self)
 		print "*** Done"

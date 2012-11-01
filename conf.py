@@ -10,7 +10,7 @@ class Conf():
 			self.__names.append(f)
 			f = os.path.join(self.__names[-1], "base")
 
-		
+
 	def Name(self):
 		return self.__names[0]
 
@@ -30,7 +30,7 @@ class Conf():
 			if os.path.exists(filename):
 				return filename
 		return None
-	
+
 	def __inlist(self, name, lst):
 		""" Return true if name is in dirlist [x, "name" ] item """
 		for item in lst:
@@ -52,7 +52,7 @@ class Conf():
 		return f
 
 	def confTree(self, path, topdown=False):
-		""" Retrive the list of files below path from all configs 
+		""" Retrive the list of files below path from all configs
 			Each item is [ rel fromfile, /tofile ]
 			The root element will contain [ None, "" ] and is therefor special.
 		"""
@@ -78,4 +78,3 @@ class Conf():
 		if not topdown:
 			f.append((None, ""))
 		return f
-

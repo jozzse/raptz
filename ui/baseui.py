@@ -16,8 +16,8 @@ class BaseUI():
 	def line(self, text):
 		self.logfile.write(text + "\n")
 		self.logfile.flush()
-		
-	
+
+
 	def message(self, text):
 		self.logfile.write(">>> " + text + "\n")
 		self.logfile.flush()

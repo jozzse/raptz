@@ -31,10 +31,10 @@ class RargsArgs(object):
 
 	def Func(self):
 		return self.__func()
-	
+
 	def Help(self):
 		return self.__hlp
-	
+
 	def AddArg(self, lname, sname=None, default=None, hlp=""):
 		arg = [lname, sname, default, default, hlp]
 		if default == None:
@@ -144,10 +144,10 @@ class Rargs(RargsArgs):
 			txt = ["", self.Help(), "", "Commands:"]
 			for cmd in self.__cmds:
 				txt.append(space_out(cmd, 24, 4) + "    " + self.__cmds[cmd].Help())
-			
+
 			return "\n".join(txt)
 		else:
-			cmd = "Command: " + self.__command.Name() 
+			cmd = "Command: " + self.__command.Name()
 			txt = [self.Help(), "", cmd, "    " + self.__command.Help(),"", "Arguments:"]
 			txt.append(RargsArgs.GetHelp(self))
 			txt.append(self.__command.GetHelp())
@@ -178,6 +178,3 @@ class Rargs(RargsArgs):
 				exit(1)
 			return args[1:]
 		return args
-
-
-

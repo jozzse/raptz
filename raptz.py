@@ -30,7 +30,7 @@ class RaptzError(Exception):
 		return self.text
 
 class Raptz(conf.Conf):
-	""" The raptz base class. 
+	""" The raptz base class.
 	FIXME: Move none subcommand functions from this class
 	"""
 	def mount(self):
@@ -44,7 +44,6 @@ class Raptz(conf.Conf):
 		#tools.umount(os.path.join(self.args.path, "dev/pts"))
 		#tools.umount(os.path.join(self.args.path, "dev"))
 		return self.tools.umount(self.sysrootPath("proc"))
-		
 	def chroot(self, *cmd):
 		""" Run Arm Chroot """
 		ret = True
@@ -54,19 +53,19 @@ class Raptz(conf.Conf):
 		lo_qemufile = "/usr/bin/qemu-arm-static"
 		sr_linuxsofile = self.sysrootPath("/lib/ld-linux.so.3")
 		lo_linuxsofile = u"/lib/ld-linux.so.3"
-		
+
 		# Prepare from lost previous commands
 		self.umount()
-		
+
 		# Prepare sysroot files
 		shutil.copy2(lo_qemufile, sr_qemufile)
 		#os.chmod(sr_qemufile, 0755)
-		
+
 		f = open(sr_rcdfile, "w")
 		f.write(RCDFILE_CONTENT)
 		f.close()
 		os.chmod(sr_rcdfile, 0755)
-		
+
 		# Move linux.so to local system
 		try:
 			pass#os.symlink(sr_linuxsofile, lo_linuxsofile)
@@ -76,7 +75,7 @@ class Raptz(conf.Conf):
 				raise
 			self.ui.message("PASS")
 			pass
-		
+
 		# Reset enviroment
 		os.putenv("LC_ALL", "C")
 		os.putenv("LANGUAGE", "C")
@@ -84,7 +83,7 @@ class Raptz(conf.Conf):
 
 		# Mount mountpoints
 		self.mount()
-		
+
 		# Do the actuall chroot
 		if len(cmd) == 0:
 			# recombind args at ;
@@ -97,7 +96,6 @@ class Raptz(conf.Conf):
 				# resplit each command at " "
 				ret = subprocess.call(["chroot", self.sysrootPath()] + run)
 		else:
-			print "CMD : " + cmd
 			# Invokation from command
 			ret = self.tools.run("chroot", self.sysrootPath(), *cmd)
 
@@ -136,7 +134,7 @@ class Raptz(conf.Conf):
 			runfiles = ("init.sh", "init.dev.sh")
 
 		self.ui.start("Configure")
-		# Run configurations in sorted order 
+		# Run configurations in sorted order
 		conflist = sorted(self.confLs("conf"), key=lambda sec: sec[1])
 		for item in conflist:
 			tmpdir = tempfile.mkdtemp(dir=self.sysrootPath("tmp"))
@@ -162,7 +160,7 @@ class Raptz(conf.Conf):
 		"""
 		# Make sure we are unmounted
 		self.ui.start(self.Name())
-		self.umount() 
+		self.umount()
 
 		if self.args.clean and os.path.isdir(self.sysrootPath()):
 			# Remove files
@@ -170,7 +168,7 @@ class Raptz(conf.Conf):
 
 		self.multistrap()
 		self.configure()
-		
+
 		self.ui.stop()
 		self.ui.message("Sysroot in %s size is %d MB" % (self.sysrootPath(), self.tools.dirsize(self.sysrootPath()) / 1024))
 
@@ -209,7 +207,7 @@ class Raptz(conf.Conf):
 		dev = part[:-1]
 		m = os.stat(self.args.device).st_mode;
 		if not stat.S_ISBLK(m):
-			print "Not a Blockdevice"	
+			print "Not a Blockdevice"
 			exit(1)
 		if not os.path.isfile("/sys/block/" + dev + "/removable"):
 			print "Not a removable device"
@@ -224,19 +222,19 @@ class Raptz(conf.Conf):
 			shutil.copy2("/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf")
 
 	def __init__(self):
-		""" Setup args and parse. 
+		""" Setup args and parse.
 		FIXME: Move to caller
 		"""
 		self.args = rargs.Rargs("Raptz sysroot handler")
 		self.args.AddArg("name", "n", "default", "Configuration Name")
-			
+
 		cmd = self.args.AddCmd("mksys", self.mksys, "Create a rootfs system");
 		cmd.AddArg("clean", "c", hlp="Clear sysroot directory before creating rootfs")
 		cmd.AddArg("dev", "D", hlp='Add development packages to sysroot')
-		
+
 		cmd = self.args.AddCmd("chroot", self.chroot, "Run commands after -- argument in arm chroot enviroment");
 		cmd.DashDashArgs(True)
-		
+
 		cmd = self.args.AddCmd("image", self.image, "Create image from a sysroot");
 		cmd.AddArg("jffs2", "j", "", "Create jffs2 image")
 		cmd.AddArg("jffs2ext", None, "", "Add extra commands to jffs2 within \"'s") # FIXME: we should be able to replace commands
@@ -255,19 +253,19 @@ class Raptz(conf.Conf):
 
 		cmd = self.args.AddCmd("config", self.config, "Change certain part of configuration")
 		cmd.AddArg("resolv-conf", "r", hlp="Copy host system resolv.conf to configuration")
-		
+
 		self.args.AddArg("debug", hlp="Enable debugmode")
 		self.args.AddArg("path", "p", DEF_NAME, "Path to sysroot")
 		self.args.AddArg("name", "n", "default", "Configuration name")
 		self.args.AddArg("ui", "u", "auto", "Select UI")
 		self.args.AddArg("logfile", "l", "raptz.log", "Set logfile")
-		
+
 		self.argv = self.args.Parse(sys.argv[1:])
-			
+
 		if self.args.help or self.argv == None:
 			return
 
-	
+
 		if not os.path.exists(self.args.name):
 			raise RaptzError("Specified configuration \"" + self.args.name + "\" does not exist")
 
@@ -277,18 +275,18 @@ class Raptz(conf.Conf):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
 			if self.args.path==DEF_NAME:
 				self.args.path=DEF_NAME.replace("<name>", self.args.name)
-		else:	
+		else:
 			if self.args.path==DEF_NAME:
 				self.args.path=DEF_NAME.replace("<name>", self.args.name)
 			if os.path.islink(self.args.name):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
-				
+
 		conf.Conf.__init__(self, self.args.name, self.args.path)
 		self.ui = ui.get(self.args.ui)(self.args.logfile)
 		self.tools = Tools(self.ui)
 
 	def start(self):
-		""" Run configuration script 
+		""" Run configuration script
 		"""
 		if self.argv == None:
 			return True

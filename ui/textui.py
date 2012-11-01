@@ -49,7 +49,7 @@ class Group():
 		else:
 			self.lines = lines
 			self.cline = 0
-	
+
 	def line(self, text, pre=""):
 		"""
 		Top most child will print the text
@@ -66,7 +66,7 @@ class Group():
 			print "".join(["Curr: ", pre, self.label, ": ", str(self.cline) , " lines", animate()]),
 		else:
 			print "".join(["Curr: ", pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%", animate()]),
-		sys.stdout.flush()	
+		sys.stdout.flush()
 
 	def done(self, pre=""):
 		"""
@@ -114,7 +114,7 @@ class UI(BaseUI):
 	def line(self, text):
 		BaseUI.line(self, text)
 		self.group.line(text)
-	
+
 	def message(self, text):
 		BaseUI.message(self, text)
 		print ""
