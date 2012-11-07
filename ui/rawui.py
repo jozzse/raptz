@@ -1,4 +1,4 @@
-
+import sys
 from baseui import BaseUI
 
 class UI(BaseUI):
@@ -12,15 +12,19 @@ class UI(BaseUI):
 			print "(" + str(lines) + " lines)"
 		else:
 			print ""
+		sys.stdout.flush()
 
 	def stop(self):
 		BaseUI.stop(self)
 		print "*** Done"
+		sys.stdout.flush()
 
 	def line(self, text):
 		BaseUI.line(self, text)
 		print text
+		sys.stdout.flush()
 
 	def message(self, text):
 		BaseUI.message(self, text)
 		print "*** Message: " + text
+		sys.stdout.flush()
