@@ -43,13 +43,23 @@ class Tools():
 		return 0
 
 	def ismount(self, mp):
-		if not os.path.exists(mp):
-			return 0
-		p = subprocess.Popen(("df", "-P", mp),
-			stdout=subprocess.PIPE)
-		return p.communicate()[0].strip().endswith(mp)
+		""" Check if a mount point is already mounted.
+		return True if mountpoint is mounted, False otherwize
+		"""
+		f = open("/etc/mtab")
+		for line in f:
+				if (line.split()[1] == mp):
+					return True
+		return False
 
 	def mount(self, device, mp, fstype=None, options=None):
+		""" Mount device (device) on mountpoint (mp) using optional type (fstype) with option options(options)
+		return True if mountpoint is mounted after operation, False otherwize
+		"""
+		if not os.path.exists(mp):
+			return False	
+		if self.ismount(mp):
+			return True
 		cmd=["mount"]
 		if fstype:
 			cmd = cmd + ["-t", fstype ]
@@ -57,16 +67,18 @@ class Tools():
 			cmd = cmd + ["-o", options ]
 		cmd = cmd + [device, mp]
 		if subprocess.call(cmd) == 0:
-			return 0
-		raise
+			return True
+		return False
 
 	def umount(self, mp):
-		""" Unmount mountpoint mp """
+		""" Unmount mountpoint mp 
+		return True if mountpoint is unmounted after operation, False otherwize
+		"""
 		if not self.ismount(mp):
-			return 0
+			return True
 		if subprocess.call(["umount", mp]) == 0:
-			return 0
-		raise
+			return True
+		return False
 
 	def dirsize(self, path):
 		""" Get size of dir """

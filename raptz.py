@@ -33,17 +33,6 @@ class Raptz(conf.Conf):
 	""" The raptz base class.
 	FIXME: Move none subcommand functions from this class
 	"""
-	def mount(self):
-		""" Mount chroot needed filesystems """
-		self.tools.mount("none", self.sysrootPath("proc"), fstype="proc")
-		#tools.mount("/dev", os.path.join(self.args.path, "dev"), options="bind")
-		#tools.mount("/dev/pts", os.path.join(self.args.path, "dev/pts"), options="bind")
-
-	def umount(self):
-		""" UnMount chroot needed filesystems """
-		#tools.umount(os.path.join(self.args.path, "dev/pts"))
-		#tools.umount(os.path.join(self.args.path, "dev"))
-		return self.tools.umount(self.sysrootPath("proc"))
 	def chroot(self, *cmd):
 		""" Run Arm Chroot """
 		ret = True
@@ -55,7 +44,8 @@ class Raptz(conf.Conf):
 		lo_linuxsofile = u"/lib/ld-linux.so.3"
 
 		# Prepare from lost previous commands
-		self.umount()
+		self.tools.umount(self.sysrootPath("dev/pts"))
+		self.tools.umount(self.sysrootPath("proc"))
 
 		# Prepare sysroot files
 		shutil.copy2(lo_qemufile, sr_qemufile)
@@ -82,7 +72,9 @@ class Raptz(conf.Conf):
 		os.putenv("LANG", "C")
 
 		# Mount mountpoints
-		self.mount()
+		self.tools.mount("/dev/pts", self.sysrootPath("dev/pts"), options="bind")
+		if not self.tools.mount("none", self.sysrootPath("proc"), fstype="proc"):
+			raise RaptzError("Could not mount proc filesystem")
 
 		# Do the actuall chroot
 		if len(cmd) == 0:
@@ -104,9 +96,10 @@ class Raptz(conf.Conf):
 		os.unlink(sr_qemufile)
 		os.unlink(sr_rcdfile)
 		
-		# Unmount
-		if not self.umount():
-			ret = 1;
+		# Un ount
+		self.tools.umount(self.sysrootPath("dev/pts"))
+		if not self.tools.umount(self.sysrootPath("proc")):
+			ret = 1
 		return ret
 
 	def multistrap(self):
@@ -148,7 +141,7 @@ class Raptz(conf.Conf):
 					continue
 				self.ui.start(ifile)
 				if not self.chroot("/bin/bash", self.chrootPath(runfile), self.chrootPath(tmpdir)):
-					raise RaptzError("Failed to execute " + runfile + " for config " + item)
+					raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
 				self.ui.stop()
 			shutil.rmtree(tmpdir)
 			self.ui.stop()
@@ -160,7 +153,8 @@ class Raptz(conf.Conf):
 		"""
 		# Make sure we are unmounted
 		self.ui.start(self.Name())
-		self.umount()
+		self.tools.umount(self.sysrootPath("dev/pts"))
+		self.tools.umount(self.sysrootPath("proc"))
 
 		if self.args.clean and os.path.isdir(self.sysrootPath()):
 			# Remove files
