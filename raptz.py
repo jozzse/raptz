@@ -90,7 +90,7 @@ class Raptz(conf.Conf):
 		else:
 			# Invokation from command
 			ret = self.tools.run("chroot", self.sysrootPath(), *cmd)
-
+		print ret
 		# Unlink
 		#os.unlink(lo_linuxsofile)
 		os.unlink(sr_qemufile)
@@ -284,19 +284,22 @@ class Raptz(conf.Conf):
 		"""
 		if self.argv == None:
 			return True
-		return self.args.Func()
+		ret =  self.args.Func()
+		print ret
+		return ret
+
 
 if __name__=="__main__":
 	debug = False
+	ret = 1
 	try:
 		raptz = Raptz()
 		debug = raptz.args.debug
-		raptz.start()
+		ret = raptz.start()
 	except RaptzError, why:
 		print ""
 		print ""
 		print "Failed to create sysroot: " + str(why)
-		exit(1)
 	except KeyboardInterrupt:
 		print ""
 		print ""
@@ -307,13 +310,10 @@ if __name__=="__main__":
 		print "Got Base exception ", repr(why), ". Installation failed."
 		if debug:
 			raise
-		exit(1)
 	except Exception, why:
 		print ""
 		print ""
 		print "Got exception", repr(why), ". Installation failed."
 		if debug:
 			raise
-		exit(1)
-
-print ""
+	exit(ret)
