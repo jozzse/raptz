@@ -90,7 +90,6 @@ class Raptz(conf.Conf):
 		else:
 			# Invokation from command
 			ret = self.tools.run("chroot", self.sysrootPath(), *cmd)
-		print ret
 		# Unlink
 		#os.unlink(lo_linuxsofile)
 		os.unlink(sr_qemufile)
@@ -284,9 +283,7 @@ class Raptz(conf.Conf):
 		"""
 		if self.argv == None:
 			return True
-		ret =  self.args.Func()
-		print ret
-		return ret
+		return self.args.Func()
 
 
 if __name__=="__main__":
