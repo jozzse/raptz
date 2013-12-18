@@ -105,9 +105,20 @@ class Raptz(conf.Conf):
 		""" Will multistrap and copy extra root files from the root configuration structure """
 		# First run multistrap
 		self.ui.start("Multistrap")
-		msfile =  self.confName("multistrap.cfg")
+		if self.args.suite:
+			#
+			# Replace suite name in multistrap configuration file.
+			# The multistrap.cfg is read-only (Perforce), i.e. need
+			# to create a copy...
+			#
+			self.tools.fixmultistrap(self.confName("multistrap.cfg"), self.args.suite)
+			msfile = self.confName("multistrap.conf")
+		else:
+			# Keep original behaviour...
+			msfile = self.confName("multistrap.cfg")
 		if not msfile:
 			raise RaptzError("Could not find multistrap file.")
+
 		# Do multistrap
 		if not self.tools.run("multistrap", '-f', msfile, '-d', self.sysrootPath()):
 			raise RaptzError("Multistrapping failed")
@@ -252,6 +263,7 @@ class Raptz(conf.Conf):
 		self.args.AddArg("name", "n", "default", "Configuration name")
 		self.args.AddArg("ui", "u", "auto", "Select UI")
 		self.args.AddArg("logfile", "l", "raptz.log", "Set logfile")
+		self.args.AddArg("suite", "S", "", "Select distro for multistrap")
 
 		self.argv = self.args.Parse(sys.argv[1:])
 

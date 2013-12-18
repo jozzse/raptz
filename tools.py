@@ -2,6 +2,7 @@
 import subprocess
 import shutil
 import os
+import re
 
 # BSD New Licence (c) 2012 Jonas Zetterberg
 
@@ -147,6 +148,25 @@ class Tools():
 				self.ui.line(" ".join(["file", frm, to]))
 				shutil.copy2(frm, to)
 		self.ui.stop()
+		return True
+
+	def fixmultistrap(self, filename, codename):
+		file = open(filename, "r")
+		if not file:
+			return False
+		s = file.read()
+		file.close()
+
+		m = re.search(".*\[FLIR\].+suite=(\w+).*", s, re.DOTALL)
+		if m and m.groups() > 0:
+			s = s[:m.start(1)] + codename + s[m.end(1):]
+
+		file = open(os.path.join(os.path.dirname(filename), "multistrap.conf"), "w");
+		if not file:
+			return False
+		file.write(s);
+		file.close()
+
 		return True
 
 	def rmtree(self, path):
