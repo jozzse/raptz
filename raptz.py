@@ -173,7 +173,7 @@ class Raptz(conf.Conf):
 			self.tools.rmtree(self.sysrootPath())
 
 		if self.args.tmpfs:
-			if not self.tools.mount("none", self.sysrootPath(""), fstype="tmpfs"):
+			if not self.tools.mount("none", self.sysrootPath(""), fstype="tmpfs", mkdir=True):
 				raise RaptzError("Failed to create tmpfs on " + self.sysrootPath(""))
 
 		self.multistrap()

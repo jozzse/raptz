@@ -56,12 +56,14 @@ class Tools():
 					return True
 		return False
 
-	def mount(self, device, mp, fstype=None, options=None):
+	def mount(self, device, mp, fstype=None, options=None, mkdir=False):
 		""" Mount device (device) on mountpoint (mp) using optional type (fstype) with option options(options)
 		return True if mountpoint is mounted after operation, False otherwize
 		"""
 		if not os.path.exists(mp):
-			return False	
+			if not mkdir:
+				return False
+			os.mkdir(mp)
 		if self.ismount(mp):
 			return True
 		cmd=["mount"]
