@@ -165,10 +165,16 @@ class Raptz(conf.Conf):
 		self.ui.start(self.Name())
 		self.tools.umount(self.sysrootPath("dev/pts"))
 		self.tools.umount(self.sysrootPath("proc"))
+		if not self.tools.umount(self.sysrootPath("")):
+			raise RaptzError("Failed to unmount old sysroot " + self.sysrootPath(""))
 
 		if self.args.clean and os.path.isdir(self.sysrootPath()):
 			# Remove files
 			self.tools.rmtree(self.sysrootPath())
+
+		if self.args.tmpfs:
+			if not self.tools.mount("none", self.sysrootPath(""), fstype="tmpfs"):
+				raise RaptzError("Failed to create tmpfs on " + self.sysrootPath(""))
 
 		self.multistrap()
 		self.configure()
@@ -235,6 +241,7 @@ class Raptz(conf.Conf):
 		cmd = self.args.AddCmd("mksys", self.mksys, "Create a rootfs system");
 		cmd.AddArg("clean", "c", hlp="Clear sysroot directory before creating rootfs")
 		cmd.AddArg("dev", "D", hlp='Add development packages to sysroot')
+		cmd.AddArg("tmpfs", "t", hlp='Create tmpfs SYSROOT directory (forced clean)')
 
 		cmd = self.args.AddCmd("chroot", self.chroot, "Run commands after -- argument in arm chroot enviroment");
 		cmd.DashDashArgs(True)
