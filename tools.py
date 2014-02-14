@@ -47,6 +47,9 @@ class Tools():
 		""" Check if a mount point is already mounted.
 		return True if mountpoint is mounted, False otherwize
 		"""
+		# remove ending / if any
+		if mp.endswith('/'):
+			mp = mp[:-1] 
 		f = open("/etc/mtab")
 		for line in f:
 				if (line.split()[1] == mp):
@@ -178,6 +181,8 @@ class Tools():
 		for f in flist:
 			self.ui.line(f)
 			i = i+1
+			if f == path:
+				continue
 			try:
 				if os.path.isdir(f) and not os.path.islink(f):
 					os.rmdir(f)
