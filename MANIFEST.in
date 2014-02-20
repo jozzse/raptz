@@ -1,6 +1,0 @@
-include README
-include *.py
-include ui/*.py
-include default
-recursive-include igepv2 * 
-recursive-include igepv2_sid *

@@ -1,0 +1,16 @@
+Source: raptz
+Section: main
+Priority: optional
+Maintainer: Jonas Zetterberg <jozz@jozz.se>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: https://github.com/jozzse/raptz.git
+#Vcs-Browser: https://github.com/jozzse/raptz
+
+Package: raptz
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Foreign architecture multistrap and setup
+  raptz is capable of generating emDebian (and other systems) external
+  architecture sysroots on Debian wheezy and later or newer Ubuntu

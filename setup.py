@@ -1,11 +1,14 @@
 from distutils.core import setup
 from subprocess import call
+import os
 
-def a():
-	m = open("MANIFEST.in", "w")
-	if call(["git", "ls-tree", "-r", "--name-only", "master"], stdout=m) != 0:
-		print "Could not create MANIFEST.in with git"
-		exit(1)
+targets=[]
+for td in ["igepv2", "igepv2_sid"]:
+	for root, dirs, files in os.walk("igepv2"):
+		fs = []
+		for f in files:
+			fs.append(os.path.join(root, f))
+		targets.append(("share/raptz/targets/" + root, fs))
 
 mods=[
 	"conf",
@@ -27,5 +30,7 @@ setup(name='raptz',
 	author_email='jozz@jozz.se',
 	url='http://jozz.no-ip.org/wiki/igep/emdebian/installer/raptz', # Fixme: make site
 	py_modules=mods,
+	scripts=['raptz.py', 'raptz'],
+	data_files=targets
 	)
 
