@@ -1,2 +1,4 @@
 #!/bin/sh
-sudo ./raptz.py $@
+RFULL=$(which $0)
+RPATH=$(dirname $RFULL)
+sudo $RPATH/raptz.py $@
