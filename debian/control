@@ -1,16 +1,17 @@
 Source: raptz
-Section: main
-Priority: optional
+Section: utils
+Priority: extra
 Maintainer: Jonas Zetterberg <jozz@jozz.se>
-Build-Depends: debhelper (>= 8.0.0)
+Build-Depends: debhelper (>= 8.0.0), python-all (>= 2.7~)
+X-Python-Version: >= 2.7
 Standards-Version: 3.9.4
 Homepage: <insert the upstream URL, if relevant>
 #Vcs-Git: https://github.com/jozzse/raptz.git
 #Vcs-Browser: https://github.com/jozzse/raptz
 
 Package: raptz
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
 Description: Foreign architecture multistrap and setup
   raptz is capable of generating emDebian (and other systems) external
   architecture sysroots on Debian wheezy and later or newer Ubuntu

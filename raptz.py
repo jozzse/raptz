@@ -1,24 +1,28 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 # BSD New Licence (c) 2012 Jonas Zetterberg
 
-import conf
+import sys
+
+sys.path.append("/usr/share/pyshared/")
+
+import Raptz.conf as conf
 import time
 import tempfile
-import fileopt
+import Raptz.fileopt as fileopt
 import stat
 import shutil
-import sys
 import subprocess
 import os
 
-import rargs
-import ui
-from tools import Tools
+import Raptz.rargs as rargs
+import Raptz.ui as ui
+from Raptz.tools import Tools
 
 RCDFILE_CONTENT = """#!/bin/dash
 exit 101
 """
+
 
 DEF_NAME="/opt/<name>"
 
