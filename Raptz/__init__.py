@@ -299,7 +299,6 @@ class Raptz(conf.Conf):
 
 		conf.Conf.__init__(self, self.args.name, self.args.path)
 		if gui != None:
-			print("A", gui)
 			self.ui = gui
 		else:
 			self.ui = ui.get(self.args.ui)(self.args.logfile)
