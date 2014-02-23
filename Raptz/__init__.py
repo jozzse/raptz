@@ -235,7 +235,7 @@ class Raptz(conf.Conf):
 			print "/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf"
 			shutil.copy2("/etc/resolv.conf", self.args.name + "/root/etc/resolv.conf")
 
-	def __init__(self, ui=None):
+	def __init__(self, gui=None):
 		""" Setup args and parse.
 		FIXME: Move to caller
 		"""
@@ -298,8 +298,9 @@ class Raptz(conf.Conf):
 				self.args.name = os.path.relpath(os.path.realpath(self.args.name))
 
 		conf.Conf.__init__(self, self.args.name, self.args.path)
-		if ui:
-			self.ui = ui
+		if gui != None:
+			print("A", gui)
+			self.ui = gui
 		else:
 			self.ui = ui.get(self.args.ui)(self.args.logfile)
 		self.tools = Tools(self.ui)

@@ -17,7 +17,7 @@ if __name__=="__main__":
 		author='Jonas Zetteberg',
 		author_email='jozz@jozz.se',
 		url='http://jozz.no-ip.org/wiki/igep/emdebian/installer/raptz', # Fixme: make site
-		scripts=['raptz.py',"raptz"],
+		scripts=['raptz.py',"raptz", "graptz"],
 		packages=("Raptz", "Raptz.ui",),
 		data_files=targets
 		)
