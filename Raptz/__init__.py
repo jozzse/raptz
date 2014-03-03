@@ -124,8 +124,12 @@ class Raptz(conf.Conf):
 			raise RaptzError("Could not find multistrap file.")
 
 		# Do multistrap
-		if not self.tools.run("multistrap", '-f', msfile, '-d', self.sysrootPath()):
-			raise RaptzError("Multistrapping failed")
+		try:
+			if not self.tools.run("multistrap", '-f', msfile, '-d', self.sysrootPath()):
+				raise RaptzError("Multistrapping failed")
+		except OSError as e:
+			raise RaptzError("Multistrapping failed: " + str(e.errno) + ": " + e.strerror)
+
 		self.ui.stop()
 
 		# Copy root filesystem
