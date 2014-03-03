@@ -1,14 +1,27 @@
 
+from ConfigParser import SafeConfigParser
 import os
 
 class Conf():
 	def __init__(self, name, path):
 		self.__names = []
 		self.__path = path
-		f = name
-		while os.path.exists(f):
-			self.__names.append(f)
-			f = os.path.join(self.__names[-1], "base")
+		self.__conf = SafeConfigParser()
+		inifiles = []
+		while os.path.exists(name):
+			self.__names.append(name)
+			inifile = os.path.join(name, "raptz.ini")
+			if os.path.isfile(inifile):
+				tmpc = SafeConfigParser()
+				if tmpc.read((inifile,))[0] == inifile:
+					inifiles = [inifile] + inifiles
+				if tmpc.has_option("raptz", "base"):
+					name = tmpc.get("raptz", "base")
+				else:
+					name = ""
+			else:
+				name = os.path.join(self.__names[-1], "base")
+		#print self.__conf.get("raptz", "conf")
 
 
 	def Name(self):
