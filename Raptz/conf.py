@@ -2,44 +2,69 @@
 from ConfigParser import SafeConfigParser
 import os
 
+
 class Conf():
-	def __init__(self, name, path):
-		self.__names = []
-		self.__path = path
-		self.__conf = SafeConfigParser()
-		inifiles = []
-		while os.path.exists(name):
-			self.__names.append(name)
-			inifile = os.path.join(name, "raptz.ini")
+	conf_paths=(
+		".",
+		os.path.expanduser("~/.config/ratpz/targets"),
+		"/usr/share/raptz/targets", 
+		)
+	confs = []
+	def __init__(self, name, sysroot):
+		self._sysroot = sysroot
+		# Find all sub configurations.
+		path = self.expand_path(name)
+		if not path:
+			raise "Inifile " + name + " not found"
+		while path:
+			self.confs.append((name, path))
+			inifile = os.path.join(path, "raptz.ini")
 			if os.path.isfile(inifile):
 				tmpc = SafeConfigParser()
-				if tmpc.read((inifile,))[0] == inifile:
-					inifiles = [inifile] + inifiles
+				if tmpc.read(inifile)[0] != inifile:
+					raise "Could not read inifile"
 				if tmpc.has_option("raptz", "base"):
 					name = tmpc.get("raptz", "base")
 				else:
-					name = ""
-			else:
-				name = os.path.join(self.__names[-1], "base")
-		#print self.__conf.get("raptz", "conf")
+					name = None
+			path = self.expand_path(name)
 
+		# Load configuration files in order
+		confs = [os.path.join(x[1], "raptz.ini") for x in self.confs]
+		self.config = SafeConfigParser()
+		self.config.read(confs)
+
+	def expand_path(self, name):
+		if not name:
+			return None
+		for path in self.conf_paths:
+			p = os.path.join(path, name)
+			if os.path.exists(p):
+				return p
+		return None
 
 	def Name(self):
-		return self.__names[0]
+		""" Return configuration name """
+		return self.confs[0][0]
 
 	def sysrootPath(self, path=""):
+		""" Return path which have sysroot path prepended """
 		if path.startswith("/"):
-			return os.path.join(self.__path, path[1:])
-		return os.path.join(self.__path, path)
+			path = path[1:]
+		return os.path.join(self._sysroot, path)
 
 	def chrootPath(self, path="/"):
+		""" Return path which have sysroot path removed """
 		if not path.startswith("/"):
 			return None
-		return path[len(self.__path):]
+		if not path.startswith(self._sysroot):
+			return None
+		return path[len(self._sysroot):]
 
 	def confName(self, path=""):
-		for x in self.__names:
-			filename = os.path.join(x, path)
+		""" Return full path to specific configuration file """
+		for c in self.confs:
+			filename = os.path.join(c[1], path)
 			if os.path.exists(filename):
 				return filename
 		return None
@@ -55,7 +80,7 @@ class Conf():
 		if not path:
 			return None
 		f = []
-		for base in self.__names:
+		for name, base in self.confs:
 			basepath = os.path.join(base, path)
 			if not os.path.isdir(basepath):
 				continue
@@ -66,16 +91,15 @@ class Conf():
 
 	def confTree(self, path, topdown=False):
 		""" Retrive the list of files below path from all configs
-			Each item is [ rel fromfile, /tofile ]
+			Each item is [ fromfile, /tofile ]
 			The root element will contain [ None, "" ] and is therefor special.
 		"""
 		if not path:
 			return None
 		f = []
-		baseroot = os.path.join(self.__names[0], path)
 		if topdown:
 			f.append((None, ""))
-		for base in self.__names:
+		for name, base in self.confs:
 			basepath = os.path.join(base, path)
 			for root, dirs, files in os.walk(basepath, topdown=topdown):
 				for filename in files:
