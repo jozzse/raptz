@@ -82,8 +82,10 @@ class Tools():
 		"""
 		if not self.ismount(mp):
 			return True
-		if subprocess.call(["umount", mp]) == 0:
-			return True
+		while self.ismount(mp):
+			if subprocess.call(["umount", mp]) == 0:
+				return True
+			print "Waiting... ", mp
 		return False
 
 	def dirsize(self, path):
