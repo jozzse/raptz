@@ -76,6 +76,7 @@ class Raptz(conf.Conf):
 		os.putenv("LANG", "C")
 
 		# Mount mountpoints
+		self.tools.mount("/dev", self.sysrootPath("dev"), options="bind")
 		self.tools.mount("/dev/pts", self.sysrootPath("dev/pts"), options="bind")
 		if not self.tools.mount("none", self.sysrootPath("proc"), fstype="proc"):
 			raise RaptzError("Could not mount proc filesystem")
@@ -101,6 +102,7 @@ class Raptz(conf.Conf):
 		
 		# Un ount
 		self.tools.umount(self.sysrootPath("dev/pts"))
+		self.tools.umount(self.sysrootPath("dev"))
 		if not self.tools.umount(self.sysrootPath("proc")):
 			ret = 1
 		return ret
@@ -172,6 +174,7 @@ class Raptz(conf.Conf):
 		# Make sure we are unmounted
 		self.ui.start(self.Name())
 		self.tools.umount(self.sysrootPath("dev/pts"))
+		self.tools.umount(self.sysrootPath("dev"))
 		self.tools.umount(self.sysrootPath("proc"))
 		if not self.tools.umount(self.sysrootPath("")):
 			raise RaptzError("Failed to unmount old sysroot " + self.sysrootPath(""))
