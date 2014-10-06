@@ -3,6 +3,7 @@
 # BSD New Licence (c) 2012 Jonas Zetterberg
 
 import sys
+import ConfigParser
 
 sys.path.append("/usr/share/pyshared/")
 
@@ -107,6 +108,66 @@ class Raptz(conf.Conf):
 			ret = 1
 		return ret
 
+	def debootstrap(self):
+		""" Will multistrap using debootstrap """
+		args=["--variant=minbase"]
+		self.ui.start("Debootstrap")
+		cp = ConfigParser.ConfigParser()
+		cp.read(self.confName("multistrap.cfg"))
+		arch=cp.get("General", "arch")
+		if arch != "":
+			args.append("--foreign")
+			args.append("--arch="+arch)
+		if cp.getboolean("General", "noauth"):
+			args.append("--no-check-gpg")
+		
+		bootstrap=cp.get("General", "bootstrap").split()[0]
+		source=cp.get(bootstrap, "source")
+		suite=cp.get(bootstrap, "suite")
+		keyring=cp.get(bootstrap, "keyring")
+		if keyring != "":
+			args.append("--keyring="+keyring)
+		args.append(suite)
+		args.append(self.sysrootPath())
+		args.append(source)
+		args.append(self.confName(suite))
+		print args
+		if not self.tools.run("debootstrap", *args):
+			raise RaptzError("Debootstrap failed")
+		if not self.chroot("debootstrap/debootstrap", "--second-stage"):
+			raise RaptzError("Debootstap second stage failed")
+		packages=[]
+		keyrings=[]
+		if not os.path.isdir(self.sysrootPath("etc/apt/sources.list.d")):
+			os.makedirs(self.sysrootPath("etc/apt/sources.list.d"))
+
+		f = open(self.sysrootPath("etc/apt/sources.list.d/raptz.list"), "w")
+		for bs in cp.get("General", "aptsources").split():		
+			source=cp.get(bs, "source")
+			suite=cp.get(bs, "suite")
+			f.write("deb %s %s main\n" % (source, suite))
+			omitdebsrc=False
+			try:
+				omitdebsrc=cp.get(bs, "omitdebsrc")
+			except:
+				pass
+			if not omitdebsrc:
+				f.write("deb-src %s %s main\n" % (source, suite))
+
+			keyrings.append(cp.get(bs, "keyring"))
+			packages+=cp.get(bs, "packages").split()
+		f.close()
+		if not self.chroot("apt-get", "update"):
+			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
+		if not self.chroot("apt-get", "--allow-unauthenticated", "-y",	"install", *keyrings):
+			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
+		if not self.chroot("apt-get", "update"):
+			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
+		if not self.chroot("apt-get", "--no-install-recommends", "-y", "install", *packages):
+			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
+
+		self.ui.stop()
+
 	def multistrap(self):
 		""" Will multistrap and copy extra root files from the root configuration structure """
 		# First run multistrap
@@ -187,7 +248,8 @@ class Raptz(conf.Conf):
 			if not self.tools.mount("none", self.sysrootPath(""), fstype="tmpfs", mkdir=True):
 				raise RaptzError("Failed to create tmpfs on " + self.sysrootPath(""))
 
-		self.multistrap()
+		self.debootstrap()
+		#self.multistrap()
 		self.configure()
 
 		self.ui.stop()

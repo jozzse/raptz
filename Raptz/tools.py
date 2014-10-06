@@ -80,12 +80,16 @@ class Tools():
 		""" Unmount mountpoint mp 
 		return True if mountpoint is unmounted after operation, False otherwize
 		"""
+		cnt=5
 		if not self.ismount(mp):
 			return True
-		while self.ismount(mp):
-			if subprocess.call(["umount", mp]) == 0:
+		nullout = os.open("/dev/null", os.O_WRONLY)
+		while self.ismount(mp) and cnt != 0:
+			if subprocess.call(["umount", mp], stderr=nullout) == 0:
+				os.close(nullout)
 				return True
-			print "Waiting... ", mp
+			cnt-=1
+		os.close(nullout)
 		return False
 
 	def dirsize(self, path):
