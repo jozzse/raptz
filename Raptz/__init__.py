@@ -130,7 +130,7 @@ class Raptz(conf.Conf):
 		args.append(suite)
 		args.append(self.sysrootPath())
 		args.append(source)
-		args.append(self.confName(suite))
+		args.append("/usr/share/debootstrap/scripts/testing")
 		print args
 		if not self.tools.run("debootstrap", *args):
 			raise RaptzError("Debootstrap failed")
