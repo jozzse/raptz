@@ -43,6 +43,19 @@ class Tools():
 			pass
 		return 0
 
+	def hasmountpoints(self, path):
+		""" Check if path contains any mountpoints
+		return True if the path contains mountpoint, False otherwise
+		"""
+		if path.endswith('/'):
+			path = path[:-1]
+		f = open("/proc/mounts")
+		for line in f:
+			if (line.split()[1].startswith(path)):
+				return True
+		return False
+
+
 	def ismount(self, mp):
 		""" Check if a mount point is already mounted.
 		return True if mountpoint is mounted, False otherwize
@@ -52,8 +65,8 @@ class Tools():
 			mp = mp[:-1] 
 		f = open("/etc/mtab")
 		for line in f:
-				if (line.split()[1] == mp):
-					return True
+			if (line.split()[1] == mp):
+				return True
 		return False
 
 	def mount(self, device, mp, fstype=None, options=None, mkdir=False):
@@ -183,20 +196,10 @@ class Tools():
 	def rmtree(self, path):
 		""" Remove complete path from filesystem """
 		self.ui.start("rmtree("+path+")")
-		flist = self.files(path)
-		self.ui.set_lines(len(flist))
-		i =0
-		for f in flist:
-			self.ui.line(f)
-			i = i+1
-			if f == path:
-				continue
-			try:
-				if os.path.isdir(f) and not os.path.islink(f):
-					os.rmdir(f)
-				else:
-					os.unlink(f)
-			except OSError:
-				print f
-				raise
+		if self.hasmountpoints(path):
+			self.ui.stop()
+			return False
+		if os.path.isdir(path):
+			shutil.rmtree(path)
 		self.ui.stop()
+		return True
