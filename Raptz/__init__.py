@@ -131,11 +131,16 @@ class Raptz(conf.Conf):
 		args.append(self.sysrootPath())
 		args.append(source)
 		args.append("/usr/share/debootstrap/scripts/testing")
-		print args
 		if not self.tools.run("debootstrap", *args):
 			raise RaptzError("Debootstrap failed")
 		if not self.chroot("debootstrap/debootstrap", "--second-stage"):
 			raise RaptzError("Debootstap second stage failed")
+		if os.path.isfile(self.confName("debconf.cfg")):
+			shutil.copy2(self.confName("debconf.cfg"),
+				self.sysrootPath("tmp/debconf.cfg"))
+			if not self.chroot("debconf-set-selections", "/tmp/debconf.cfg"):
+				print "Could not set selections!"
+				raise
 		packages=[]
 		keyrings=[]
 		if not os.path.isdir(self.sysrootPath("etc/apt/sources.list.d")):
