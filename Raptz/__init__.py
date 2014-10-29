@@ -141,6 +141,12 @@ class Raptz(conf.Conf):
 			if not self.chroot("debconf-set-selections", "/tmp/debconf.cfg"):
 				print "Could not set selections!"
 				raise
+		
+		# Copy root filesystem
+		tree = self.confTree("root", True)
+		tree = [ ( x[0], self.sysrootPath(x[1])) for x in tree ]
+		self.tools.CopyList(tree)
+		
 		packages=[]
 		keyrings=[]
 		if not os.path.isdir(self.sysrootPath("etc/apt/sources.list.d")):
@@ -232,6 +238,13 @@ class Raptz(conf.Conf):
 			shutil.rmtree(tmpdir)
 			self.ui.stop()
 		self.ui.stop()
+
+	def umount_all(self):
+		self.tools.umount(self.sysrootPath("dev/pts"))
+		self.tools.umount(self.sysrootPath("dev"))
+		self.tools.umount(self.sysrootPath("proc"))
+		self.tools.umount(self.sysrootPath("sys"))
+
 
 	def mksys(self):
 		""" Create a system
@@ -389,28 +402,32 @@ class Raptz(conf.Conf):
 if __name__=="__main__":
 	debug = False
 	ret = 1
+	raptz = Raptz()
 	try:
-		raptz = Raptz()
 		debug = raptz.args.debug
 		ret = raptz.start()
 	except RaptzError, why:
 		print ""
 		print ""
 		print "Failed to create sysroot: " + str(why)
+		raptz.umount_all()
 	except KeyboardInterrupt:
 		print ""
 		print ""
 		print "It looks like you have canceled the Sysroot installation. Installation is not complete."
+		raptz.umount_all()
 	except BaseException,why:
 		print ""
 		print ""
 		print "Got Base exception ", repr(why), ". Installation failed."
+		raptz.umount_all()
 		if debug:
 			raise
 	except Exception, why:
 		print ""
 		print ""
 		print "Got exception", repr(why), ". Installation failed."
+		raptz.umount_all()
 		if debug:
 			raise
 	exit(ret)
