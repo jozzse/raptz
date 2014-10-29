@@ -99,7 +99,10 @@ class Raptz(conf.Conf):
 		# Unlink
 		#os.unlink(lo_linuxsofile)
 		os.unlink(sr_qemufile)
-		os.unlink(sr_rcdfile)
+		try:
+			os.unlink(sr_rcdfile)
+		except:
+			pass
 		
 		# Un ount
 		self.tools.umount(self.sysrootPath("dev/pts"))
