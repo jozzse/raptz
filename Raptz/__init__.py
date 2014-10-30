@@ -243,10 +243,11 @@ class Raptz(conf.Conf):
 		self.ui.stop()
 
 	def umount_all(self):
-		self.tools.umount(self.sysrootPath("dev/pts"))
-		self.tools.umount(self.sysrootPath("dev"))
-		self.tools.umount(self.sysrootPath("proc"))
-		self.tools.umount(self.sysrootPath("sys"))
+		if self.tools:
+			self.tools.umount(self.sysrootPath("dev/pts"))
+			self.tools.umount(self.sysrootPath("dev"))
+			self.tools.umount(self.sysrootPath("proc"))
+			self.tools.umount(self.sysrootPath("sys"))
 
 
 	def mksys(self):
@@ -329,6 +330,7 @@ class Raptz(conf.Conf):
 		""" Setup args and parse.
 		FIXME: Move to caller
 		"""
+		self.tools=None
 		self.args = rargs.Rargs("Raptz sysroot handler")
 		self.args.AddArg("name", "n", "default", "Configuration Name")
 
