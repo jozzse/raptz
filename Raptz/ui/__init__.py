@@ -1,15 +1,9 @@
 
 def init_auto():
 	try:
-		from gtkui import UI
+		from textui import UI
 	except:
-		try:
-			from cursesui import UI
-		except:
-			try:
-				from textui import UI
-			except:
-				from rawui import UI
+		from rawui import UI
 	return UI
 
 def get(uidef):
@@ -21,5 +15,6 @@ def get(uidef):
 	if uidef=="text":
 		from textui import UI
 		return UI
+	
 
 	raise
