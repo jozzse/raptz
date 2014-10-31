@@ -63,7 +63,7 @@ class Tools():
 		# remove ending / if any
 		if mp.endswith('/'):
 			mp = mp[:-1] 
-		f = open("/etc/mtab")
+		f = open("/proc/mounts")
 		for line in f:
 			if (line.split()[1] == mp):
 				return True
@@ -102,6 +102,7 @@ class Tools():
 				os.close(nullout)
 				return True
 			cnt-=1
+		print "Unable to unmount ",mp
 		os.close(nullout)
 		return False
 

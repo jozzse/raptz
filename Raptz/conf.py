@@ -5,7 +5,7 @@ import os
 class Conf():
 	def __init__(self, name, path):
 		self.__names = []
-		self.__path = path
+		self.__path = os.path.abspath(path)
 		self.__conf = SafeConfigParser()
 		inifiles = []
 		while os.path.exists(name):
