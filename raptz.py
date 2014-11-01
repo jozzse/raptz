@@ -3,7 +3,6 @@
 # BSD New Licence (c) 2012 Jonas Zetterberg
 
 import sys
-
 sys.path.append("/usr/share/pyshared/")
 
 from Raptz import Raptz, RaptzError

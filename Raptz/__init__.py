@@ -49,8 +49,6 @@ class Raptz(conf.Conf):
 		lo_linuxsofile = u"/lib/ld-linux.so.3"
 
 		# Prepare from lost previous commands
-		self.tools.umount(self.sysrootPath("dev/pts"))
-		self.tools.umount(self.sysrootPath("proc"))
 
 		# Prepare sysroot files
 		shutil.copy2(lo_qemufile, sr_qemufile)
@@ -104,17 +102,13 @@ class Raptz(conf.Conf):
 		except:
 			pass
 		
-		# Un ount
-		self.tools.umount(self.sysrootPath("dev/pts"))
-		self.tools.umount(self.sysrootPath("dev"))
-		if not self.tools.umount(self.sysrootPath("proc")):
-			ret = 1
+		self.umount_all()
 		return ret
 
 	def debootstrap(self):
 		""" Will multistrap using debootstrap """
-		args=["--variant=minbase"]
 		self.ui.start("Debootstrap")
+		args=["--variant=minbase"]
 		cp = ConfigParser.ConfigParser()
 		cp.read(self.confName("multistrap.cfg"))
 		arch=cp.get("General", "arch")
@@ -145,11 +139,15 @@ class Raptz(conf.Conf):
 				print "Could not set selections!"
 				raise
 		
+		self.ui.stop()
+		self.ui.start("CopyTree")
 		# Copy root filesystem
 		tree = self.confTree("root", True)
 		tree = [ ( x[0], self.sysrootPath(x[1])) for x in tree ]
 		self.tools.CopyList(tree)
 		
+		self.ui.stop()
+		self.ui.start("SetupApt")
 		packages=[]
 		keyrings=[]
 		if not os.path.isdir(self.sysrootPath("etc/apt/sources.list.d")):
@@ -171,16 +169,22 @@ class Raptz(conf.Conf):
 			keyrings.append(cp.get(bs, "keyring"))
 			packages+=cp.get(bs, "packages").split()
 		f.close()
-		if not self.chroot("apt-get", "update"):
-			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
-		if not self.chroot("apt-get", "--allow-unauthenticated", "-y",	"install", *keyrings):
-			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
-		if not self.chroot("apt-get", "update"):
-			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
-		if not self.chroot("apt-get", "--no-install-recommends", "-y", "install", *packages):
-			raise RaptzError("Failed to execute " + runfile + " for config " + str(item))
-
+		
 		self.ui.stop()
+		self.ui.start("InstallKeys")
+		
+		if not self.chroot("apt-get", "update"):
+			raise RaptzError("apt-get update ")
+		if not self.chroot("apt-get", "--allow-unauthenticated", "-y",	"install", *keyrings):
+			raise RaptzError("apt-get install keyrings")
+		if not self.chroot("apt-get", "update"):
+			raise RaptzError("apt-get update")
+		self.ui.stop()
+		self.ui.start("InstallPackages")
+		if not self.chroot("apt-get", "--no-install-recommends", "-y", "install", *packages):
+			raise RaptzError("apt-get install packages")
+		self.ui.stop()
+
 
 	def multistrap(self):
 		""" Will multistrap and copy extra root files from the root configuration structure """
@@ -244,11 +248,10 @@ class Raptz(conf.Conf):
 
 	def umount_all(self):
 		if self.tools:
-			self.tools.umount(self.sysrootPath("dev/pts"))
-			self.tools.umount(self.sysrootPath("dev"))
 			self.tools.umount(self.sysrootPath("proc"))
 			self.tools.umount(self.sysrootPath("sys"))
-
+			self.tools.umount(self.sysrootPath("dev/pts"))
+			self.tools.umount(self.sysrootPath("dev"))
 
 	def mksys(self):
 		""" Create a system
@@ -256,11 +259,7 @@ class Raptz(conf.Conf):
 		"""
 		# Make sure we are unmounted
 		self.ui.start(self.Name())
-		self.tools.umount(self.sysrootPath("dev/pts"))
-		self.tools.umount(self.sysrootPath("dev"))
-		self.tools.umount(self.sysrootPath("proc"))
-		if not self.tools.umount(self.sysrootPath("")):
-			raise RaptzError("Failed to unmount old sysroot " + self.sysrootPath(""))
+		self.umount_all()
 
 		if self.args.clean and os.path.isdir(self.sysrootPath()):
 			# Remove files
@@ -285,7 +284,9 @@ class Raptz(conf.Conf):
 		if self.args.cpio:
 			fo.mk_cpio(self.sysrootPath(), self.args.cpio)
 		if self.args.tar:
+			self.ui.start(os.path.basename(self.args.tar))
 			fo.mk_targz(self.sysrootPath(), self.args.tar)
+			self.ui.stop()
 		if self.args.ext3:
 			size = self.tools.txt2size(self.args.size)
 			self.ui.start("Make " + self.args.ext3 + " (ext3 " + str(size) + " Bytes)")
@@ -402,37 +403,3 @@ class Raptz(conf.Conf):
 		if self.argv == None:
 			return True
 		return self.args.Func()
-
-
-if __name__=="__main__":
-	debug = False
-	ret = 1
-	raptz = Raptz()
-	try:
-		debug = raptz.args.debug
-		ret = raptz.start()
-	except RaptzError, why:
-		print ""
-		print ""
-		print "Failed to create sysroot: " + str(why)
-		raptz.umount_all()
-	except KeyboardInterrupt:
-		print ""
-		print ""
-		print "It looks like you have canceled the Sysroot installation. Installation is not complete."
-		raptz.umount_all()
-	except BaseException,why:
-		print ""
-		print ""
-		print "Got Base exception ", repr(why), ". Installation failed."
-		raptz.umount_all()
-		if debug:
-			raise
-	except Exception, why:
-		print ""
-		print ""
-		print "Got exception", repr(why), ". Installation failed."
-		raptz.umount_all()
-		if debug:
-			raise
-	exit(ret)

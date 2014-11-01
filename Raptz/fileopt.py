@@ -15,7 +15,7 @@ class FileOpt():
 		if inpath.endswith("/"):
 			inpath = inpath[:-1]
 		files = self.tools.files(inpath, topdown=True)
-		self.ui.start("Make " + cpiofile + "(cpio)", len(files))
+		self.ui.set_lines(len(files))
 		l = len(inpath)
 		f = ["".join([".", fl[l:], "\n"]) for fl in files]
 		fd=open(cpiofile, "wb", 0644)
@@ -29,7 +29,6 @@ class FileOpt():
 			self.ui.line(ff)
 		p.stdin.close()
 		p.wait()
-		self.ui.stop()
 
 	def ext_cpio(self, cpiofile, outpath):
 		self.ui.start("Exctract " + cpiofile + "(cpio)")
@@ -54,7 +53,7 @@ class FileOpt():
 
 	def mk_targz(self, inpath, tarfile):
 		files = self.tools.files(inpath, topdown=True)
-		self.ui.start("Make " + tarfile + "(tar.gz)", len(files))
+		self.ui.set_lines(len(files))
 		p = subprocess.Popen(["tar",
 				"-c",
 				"-v",
@@ -66,7 +65,6 @@ class FileOpt():
 		while p.poll() == None:
 			self.ui.line(p.stdout.readline())
 		p.wait()
-		self.ui.stop()
 
 	def ext_targz(self, tarfile, outpath):
 		self.ui.start("Extract " + tarfile + "(tar.gz)")

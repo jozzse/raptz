@@ -1,40 +1,18 @@
 
-import math
 import sys
 from baseui import BaseUI
 import time as ttt
 from time import time
-
-ANIM=(
-	" /(^_^/)  ",
-	" <(^_^<)  ",
-	" <(^_^ )> ",
-	" <( ^_^)> ",
-	"  (>^_^)> ",
-	"  (\\^_^)\\ ",
-	None)
-
-
-SIZE=24
-def animate():
-	global v
-	try:
-		v = v + 1
-	except NameError:
-		v = 0
-	b = int(abs((math.cos(v/11.0) * SIZE)))
-	s = int(abs((math.sin(v/7.0) * SIZE)))
-	if (b > s):
-		t = b
-		b = s
-		s = t
-	return " "*b + "<" + "="*(s-b) + ">" + " "*(SIZE - s)
-
+import os
 class Group():
 	def __init__(self, label="Init", subgroup=0, lines=0):
 		"""
 		Initialize a Group as a top most child
 		"""
+		try:
+			self.columns = int(os.popen('stty size', 'r').read().split()[1])
+		except:
+			self.columns = 79
 		self.label = label
 		self.subgroup = subgroup
 		self.totlines = lines
@@ -58,14 +36,17 @@ class Group():
 			return self.child.line(text, pre + self.label + ":")
 		self.cline = self.cline + 1
 		t = time()
-		if t - self.time < 1.0/60:
+		if t - self.time < 1.0/30:
 			return
 		self.time = t
-		print "\r\033[K",
-		if not self.lines:
-			print "".join(["Curr: ", pre, self.label, ": ", str(self.cline) , " lines", animate()]),
-		else:
-			print "".join(["Curr: ", pre, self.label, ": ", str(self.cline * 100 / self.lines) , "%", animate()]),
+		sys.stdout.write("\r\033[K")
+		sys.stdout.flush()
+		pre = pre + self.label
+		if self.lines:
+			pre+="(%3d%%)" % (self.cline * 100 / self.lines)
+		pre += "> " 
+		pre += text[0:self.columns-len(pre)].strip() 
+		sys.stdout.write(pre)
 		sys.stdout.flush()
 
 	def done(self, pre=""):
@@ -73,10 +54,11 @@ class Group():
 		Removes the top most child. If a child returns True it wants to be removed
 		"""
 		if not self.child:
-			print "\r\033[K", "Done:", pre + self.label, self.cline, " lines"
 			return True
 		if self.child.done(pre + self.label + ":"):
 			self.child = None
+		sys.stdout.write("\r\033[K")
+		sys.stdout.flush()
 		return False
 
 	def sub(self, text, lines):

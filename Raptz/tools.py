@@ -1,6 +1,7 @@
 
 import subprocess
 import shutil
+import time
 import os
 import re
 
@@ -101,8 +102,10 @@ class Tools():
 			if subprocess.call(["umount", mp], stderr=nullout) == 0:
 				os.close(nullout)
 				return True
+			time.sleep(0.1)
 			cnt-=1
-		print "Unable to unmount ",mp
+		if subprocess.call(["umount", "-l",  mp], stderr=nullout) != 0:
+			print "Unable to unmount ",mp
 		os.close(nullout)
 		return False
 

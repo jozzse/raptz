@@ -3,6 +3,7 @@ def init_auto():
 	try:
 		from textui import UI
 	except:
+		raise
 		from rawui import UI
 	return UI
 
