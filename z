@@ -1,0 +1,151 @@
+#!/usr/bin/python
+
+import sys
+import os
+
+from libraptz.host import Host
+from libraptz.configuration import Configuration
+from libraptz.cdebootstrap import CDebootstrap
+from libraptz.debootstrap import Debootstrap
+from libraptz.multistrap import Multistrap
+from libraptz.apt import Apt
+from libraptz.configure import Configure
+from libraptz.raptzerror import RaptzException
+from libraptz.mount import Mount
+
+# Should be moved to ui?
+class Script:
+	_script = []
+	def __init__(self, host):
+		self._host = host
+
+	def add(self, cmd, *kargs):
+		self._script.append((cmd, kargs))
+
+	def run(self):
+		self._host.set_parts(len(self._script))
+		for cmd, kargs in self._script:
+			self._host.start(cmd.__name__)
+			if self._host.conf().debug:
+				cmd(*kargs)
+			else:
+				try:
+					cmd(*kargs)
+				except RaptzException as e:
+					print str(e)
+					return False
+			self._host.done()
+		return True
+
+from argparse import ArgumentParser
+class Raptz:
+	"""
+Raptz sysroot handler
+
+  raptz command [options]
+	"""
+	def __init__(self):
+		self._argp = ArgumentParser(prog="raptz")
+		self._argp.add_argument('-p', '--path', help="Path to sysroot",
+			default="HEJ")
+		self._argp.add_argument("--debug", help="Enable debug mode",
+			 default=False, action='store_true')
+
+		self._argp.add_argument('-n', '--name', help="Configuration name",
+			default="default"
+		)
+		self._argp.add_argument('-l', '--logfile', help="Set logfile (default raptz.log)",
+			default="raptz.log"
+		)
+		self._argp.add_argument('-u', '--ui', help="Ui selection (log, term)",
+			default="term"
+		)
+	def _parse_args(self):
+		self._args = self._argp.parse_args()
+		self._conf = Configuration(self._args)
+
+	def chroot(self):
+		""" Chroot into a sysroot """
+		pass
+
+	def mksys(self):
+		""" Create a sysroot """
+		self._argp.add_argument("-c", "--clean", help="Clean the sysroot before building",
+			 default=False, action='store_true')
+		self._argp.add_argument("-D", "--dev", help="Run development parts of configuration",
+			 default=False, action='store_true')
+		self._argp.add_argument("-S", "--suite", help="Set different suite to install",
+			default=None)
+		self._argp.add_argument("-b", "--bootstrap", default="multistrap",
+			help="bootstrap mode (multstrap*, debootstrap, cdebootstrap)"
+		)
+		self._parse_args()
+		host = Host(self._conf)
+		mnt = Mount(host)
+		sc = Script(host)
+		if self._conf.args.bootstrap == "multistrap":
+			bsp = Multistrap(host)
+		elif self._conf.args.bootstrap == "debootstrap":
+			bsp = Debootstrap(host)
+		elif self._conf.args.bootstrap == "cdebootstrap":
+			bsp = CDebootstrap(host)
+		else:
+			raise "Unknown mode " + self._conf.args.bootstrap
+		apt = Apt(host)
+		cfg = Configure(host)
+		if self._args.clean:
+			sc.add(cfg.clean)
+		sc.add(mnt.mount_tmp)
+		sc.add(bsp.bootstrap)
+		sc.add(mnt.mount_system)
+		sc.add(cfg.debconf)
+		sc.add(bsp.secondstage)
+		sc.add(cfg.copyroot)
+		sc.add(bsp.finalize)
+
+		sc.add(apt.update)
+		sc.add(apt.install, self._conf.keyrings())
+		sc.add(apt.update)
+		sc.add(apt.install, self._conf.packages())
+		sc.add(cfg.configure)
+		sc.add(mnt.umount_system)
+		sc.add(mnt.umount_tmp)
+		try:
+			sc.run()
+		except:
+			mnt.umount_system()
+			mnt.umount_tmp()
+			raise
+		return True
+
+	def help(self):
+		""" Print this help"""
+		print self.__doc__
+		print "Commands:"
+		for m in dir(self):
+			if m.startswith("_"):
+				continue
+			print "  %-10s - %s" %(m, getattr(self, m).__doc__)
+		print ""
+
+command="help"
+try:
+	command=sys.argv[1]
+	del sys.argv[1]
+except IndexError:
+	pass
+
+ret = 0
+raptz = Raptz()
+func = getattr(raptz, command)
+if not func():
+	ret = 1
+
+try:
+	os.wait()
+except OSError as e:
+	if e.errno == 10: # No child process
+		pass
+	else:
+		raise
+exit(ret)

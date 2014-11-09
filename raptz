@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# sudo raptz starter script
-
-if [ "`whoami`"  != "root" ]; then
-	sudo -E $0.py "$@"
-	exit $?
-fi
-$0.py "$@"

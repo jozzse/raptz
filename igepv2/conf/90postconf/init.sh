@@ -29,9 +29,6 @@ fi
 EOF
 fi
 
-[ -e /usr/lib/libstdc++.so ] || ln  /usr/lib/libstdc++.so.6 /usr/lib/libstdc++.so
-[ -e /lib/libgcc_s.so ] || ln  /lib/libgcc_s.so.1 /lib/libgcc_s.so
-
 if ! cat /etc/inittab | grep ttyO2 > /dev/null ; then
 	echo "s0:2345:respawn:/sbin/getty -L ttyO2 115200 vt100" >> /etc/inittab
 fi
