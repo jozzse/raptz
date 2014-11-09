@@ -62,6 +62,7 @@ class Multistrap(Bootstrap):
 		return True
 
 	def secondstage(self):
+		self._host.fs.mount_system()
 		self._done = 0.0
 		r = self._host.runner
 		p = self._host.poller

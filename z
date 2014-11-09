@@ -66,7 +66,12 @@ Raptz sysroot handler
 
 	def chroot(self):
 		""" Chroot into a sysroot """
-		pass
+		self._parse_args()
+		host = Host(self._conf)
+		host.fs.mount_system()
+		ret = host.runner.chroot(["bash"])
+		host.fs.umount_system()
+		return ret
 
 	def mksys(self):
 		""" Create a sysroot """
@@ -81,7 +86,6 @@ Raptz sysroot handler
 		)
 		self._parse_args()
 		host = Host(self._conf)
-		mnt = Mount(host)
 		sc = Script(host)
 		if self._conf.args.bootstrap == "multistrap":
 			bsp = Multistrap(host)
@@ -95,27 +99,19 @@ Raptz sysroot handler
 		cfg = Configure(host)
 		if self._args.clean:
 			sc.add(cfg.clean)
-		sc.add(mnt.mount_tmp)
 		sc.add(bsp.bootstrap)
-		sc.add(mnt.mount_system)
 		sc.add(cfg.debconf)
 		sc.add(bsp.secondstage)
 		sc.add(cfg.copyroot)
 		sc.add(bsp.finalize)
-
+		
+		sc.add(host.fs.mount_system)
 		sc.add(apt.update)
 		sc.add(apt.install, self._conf.keyrings())
 		sc.add(apt.update)
 		sc.add(apt.install, self._conf.packages())
 		sc.add(cfg.configure)
-		sc.add(mnt.umount_system)
-		sc.add(mnt.umount_tmp)
-		try:
-			sc.run()
-		except:
-			mnt.umount_system()
-			mnt.umount_tmp()
-			raise
+		sc.run()
 		return True
 
 	def help(self):

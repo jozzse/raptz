@@ -6,6 +6,7 @@ import select
 from cbpoller import CbPoller
 from chroot import FakeRoot, ChRoot
 from ui import UiLog, UiTerm
+from fs import Fs
 
 class Host():
 	def __init__(self, conf):
@@ -24,6 +25,7 @@ class Host():
 			self._ui = UiTerm()
 		else:
 			self._ui = UiLog()
+		self.fs = Fs(self)
 		self.runner = ChRoot(self)
 
 	def conf(self):

@@ -24,7 +24,7 @@ def umount_all(base):
 			print "COULD NOT UNMOUNT"
 	return ok
 
-class Mount:
+class Fs:
 	SYS=("/sys", "/proc", "/dev")
 	TMP=("/var/cache/apt",)
 	def __init__(self, host):
