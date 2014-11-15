@@ -17,7 +17,7 @@ class Multistrap(Bootstrap):
 		self._done=0
 	def bootstrap(self):
 		# Lets build the multistrap configuration file
-		conf = self._host.conf()
+		conf = self._host.conf
 		par = SafeConfigParser()
 		par.add_section("General")
 		par.set("General", "arch", conf.arch())
@@ -32,7 +32,7 @@ class Multistrap(Bootstrap):
 		for repro in conf.repros():
 			par.add_section(repro)
 			par.set(repro, "keyring", keyrings[repro])
-			par.set(repro, "packages", "dash apt apt-utils")
+			par.set(repro, "packages", "dash apt apt-utils " + " ".join(conf.early_packages()))
 			par.set(repro, "source", conf.source(repro))
 			par.set(repro, "suite", conf.suite(repro))
 			par.set(repro, "components", " ".join(conf.components(repro)))
@@ -57,7 +57,6 @@ class Multistrap(Bootstrap):
 		self._host.progress(float(self._done)/self._items)
 		return True
 	def _stderr(self, line):
-		print "WARN:" + line
 		self._host.warn(line)
 		return True
 
@@ -92,7 +91,7 @@ class Multistrap(Bootstrap):
 		return True
 	
 	def finalize(self):
-		conf = self._host.conf()
+		conf = self._host.conf
 		listd = conf.sysroot("/etc/apt/sources.list.d")
 		if os.path.isdir(listd):
 			shutil.rmtree(listd)

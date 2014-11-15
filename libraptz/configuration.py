@@ -56,6 +56,10 @@ class Configuration:
 		for c in cs:
 			ret += self._config.get(c, "packages").split()
 		return ret
+	def early_packages(self):
+		if self.args.mode == "fake":
+			return self._config.get("General", "fakepackages").split()
+		return []
 
 	def sysroot(self, path=None):
 		""" Get a sysroot path """

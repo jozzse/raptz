@@ -27,13 +27,13 @@ class CDebootstrap(Bootstrap):
 		if line.startswith("I"):
 			self._host.text(line)
 		else:
-			print line
+			self._host.dbg(line)
 		return True
 
 	def bootstrap(self):
 		""" Will install using debootstrap """
+		conf = self._host.conf
 		cmds=["cdebootstrap", "--flavour="+self._flavour]
-		conf = self._host.conf()
 
 		if conf.arch():
 			cmds.append("--foreign")

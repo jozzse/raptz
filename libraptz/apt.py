@@ -75,9 +75,6 @@ class Apt():
 		if st[0] == "dlstatus" or st[0] == "pmstatus":
 			prog = self._prog_set(st[0], float(st[2]))
 		else:
-			print "--"
-			print st
-			print "--"
 			return True
 		self._host.progress(prog, st[3])
 		return True

@@ -6,30 +6,43 @@ import select
 from cbpoller import CbPoller
 from chroot import FakeRoot, ChRoot
 from ui import UiLog, UiTerm
-from fs import Fs
+from fs import FakeFs, RootFs
+from raptzerror import RaptzException
+
 
 class Host():
 	def __init__(self, conf):
-		self.poller = CbPoller()
-		self._conf = conf
-		self._log = open(self._conf.args.logfile, "w")
-		self._stdout_pipe = os.pipe()
-		self.poller.add(self._stdout_pipe[0], self._stdout)
-		self._stderr_pipe = os.pipe()
-		self.poller.add(self._stderr_pipe[0], self._stderr)
+		self._stdoutfd = sys.stdout.fileno()
+		self._stderrfd = sys.stderr.fileno()
+		self.conf = conf
+		self._log = open(self.conf.args.logfile, "w")
 		self._outcb = {}
 		self._errcb = {}
 		self._outline = ""
 		self._errline = ""
+		self.poller = CbPoller()
 		if conf.args.ui == "term":
 			self._ui = UiTerm()
+			self.redirout()
 		else:
 			self._ui = UiLog()
-		self.fs = Fs(self)
-		self.runner = ChRoot(self)
+		if conf.args.mode == "fake":
+			self.fs = FakeFs(self)
+			self.runner = FakeRoot(self)
+		elif conf.args.mode == "root":
+			if os.getuid() != 0:
+				raise RaptzException("You shall be root to run in root mode")
+			self.fs = RootFs(self)
+			self.runner = ChRoot(self)
+
+	def redirout(self):
+		pin, self._stdoutfd = os.pipe()
+		self.poller.add(pin, self._stdout)
+		pin, self._stderrfd = os.pipe()
+		self.poller.add(pin, self._stderr)
 
 	def conf(self):
-		return self._conf
+		return self.conf
 
 	def set_parts(self, parts):
 		self._ui._parts = parts
@@ -82,10 +95,10 @@ class Host():
 		return True
 
 	def stdoutfd(self):
-		return self._stdout_pipe[1]
+		return self._stdoutfd
 
 	def stderrfd(self):
-		return self._stderr_pipe[1]
+		return self._stderrfd
 
 	def start(self, name):
 		self._ui.start(name)
@@ -94,6 +107,10 @@ class Host():
 
 	def warn(self, text):
 		self._ui.warn(text)
+
+	def dbg(self, text):
+		if self.conf.args.debug:
+			self._ui.dbg(text)
 
 	def progress(self, prog, text=None):
 		self._ui.progress(prog)

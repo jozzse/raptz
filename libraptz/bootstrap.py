@@ -14,7 +14,7 @@ class Bootstrap:
 		pass
 	
 	def finalize(self):
-		conf = self._host.conf()
+		conf = self._host.conf
 		listd = conf.sysroot("/etc/apt/sources.list.d")
 
 		if not os.path.isdir(listd):

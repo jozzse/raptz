@@ -3,7 +3,9 @@
 import sys
 from subprocess import check_output
 
-class Ui:
+class Ui():
+	def __init__(self):
+		pass
 	def progress(self, prog):
 		pass
 	def part(self):
@@ -14,6 +16,10 @@ class Ui:
 		pass
 	def text(self, text):
 		raise # Must be implemented
+	def dbg(self, text):
+		print
+		print "DEBUG: " + text
+		print
 	def warn(self, text):
 		self.text(text)
 
@@ -29,10 +35,10 @@ class UiTerm(Ui):
 	_part = 0
 	_name = ""
 	_text = ""
-	try:
-		columns = int(check_output(['stty','size']).split()[1])-1
-	except:
-		columns = 79
+	columns = 79
+	def __init__(self):
+		Ui.__init__(self)
+
 	def progress(self, prog):
 		if prog <= 1.0:
 			self._prog = prog
@@ -41,20 +47,27 @@ class UiTerm(Ui):
 		return "%2d/%d" % (self._part, self._parts)
 	
 	def start(self, name):
+		try:
+			self.columns = int(check_output(['stty','size']).split()[1])-1
+		except:
+			pass
 		self._name = name
 		self._part += 1
 		self._prog = 0.0
 		return self
 
 	def done(self):
+		self._prog = 0.0
 		sys.stdout.write("\r\033[K")
-		sys.stdout.write("%s:%s:100.0%%:Done\n" % (self.part(), self._name))
+		sys.stdout.write("%s:%5.1f%%:%s:Done" % (self.part(), self._prog*100.0, self._name))
+		if self._part == self._parts:
+			sys.stdout.write("\n")
 		sys.stdout.flush()
 
 	def text(self, text):
-		self._text = text
+		self._text = text.strip()
 		sys.stdout.write("\r\033[K")
-		txt = "%s:%5.1f%%:%s>" % (self.part(), self._prog*100.0, self._name)
+		txt = "%s:%5.1f%%:%s> " % (self.part(), self._prog*100.0, self._name)
 		txt += self._text[0:self.columns-len(txt)]
 		sys.stdout.write(txt)
 		sys.stdout.flush()

@@ -31,16 +31,15 @@ class CbPoller:
 		del self.cb[fd]
 
 	def poll(self, timeout):
-		while True:
-			res = self.poller.poll(int(timeout * 1000))
-			if res == None:
-				return -1
-			if res == []:
-				return 0
-			for fd, ev in res:
-				cb = self.cb[fd]
-				if not cb[1](cb[0], ev, *cb[2]):
-					self.remove(fd)
+		res = self.poller.poll(int(timeout * 1000))
+		if res == None:
+			return -1
+		if res == []:
+			return 0
+		for fd, ev in res:
+			cb = self.cb[fd]
+			if not cb[1](cb[0], ev, *cb[2]):
+				self.remove(fd)
 		return len(res)
 
 	def close(self):

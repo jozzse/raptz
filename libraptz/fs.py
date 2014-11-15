@@ -26,70 +26,73 @@ def umount_all(base):
 
 class Fs:
 	SYS=("/sys", "/proc", "/dev")
-	TMP=("/var/cache/apt",)
 	def __init__(self, host):
 		self._host = host
-		atexit.register(umount_all, self._host.conf().sysroot())
-
+	
 	def mount_system(self):
 		for mp in self.SYS:
+			if self.bound(mp):
+				continue
 			if not self.bind(mp):
 				return False
 		return True
-
-	def mount_tmp(self):
-		for mp in self.TMP:
-			if not self.tmpmount(mp, True):
-				return False
-		return True
-
+	
 	def umount_system(self):
 		ok = True
 		for mp in self.SYS:
+			if not self.bound(mp):
+				continue
 			if not self.unbind(mp):
 				ok = False
-				print "Failed to unmount ", mp
+				self._host.warn("Failed to unmount " + mp)
 		return ok
 
-	def umount_tmp(self):
-		ok = True
-		for mp in self.TMP:
-			if not self.tmpumount(mp):
-				ok = False
-				print "Failed to unmount ", mp
-		return ok
+	def bound(self, mp):
+		raise
 
+	def bind(self, mp):
+		raise
 
-	def mounted(self, mp):
+	def unbinfs(self, mp):
+		raise
+
+class FakeFs(Fs):
+	_binds=[]
+	def bind(self, mp):
+		self._binds.append(mp)
+		return True
+
+	def unbind(self, mp):
+		del self._binds[self._binds.index(mp)]
+		return True
+
+	def bound(self, mp):
+		return mp in self._binds
+
+	def binds(self):
+		return ":".join(self._binds)
+
+class RootFs(Fs):
+	def __init__(self, host):
+		self._host = host
+		atexit.register(umount_all, self._host.conf.sysroot())
+
+	def bind(self, path):
+		mp = self._host.conf.sysroot(path)
+		r = self._host.runner
+		ret = r.run(["mount", "--bind", path, mp]) == 0
+		return ret
+
+	def unbind(self, path):
+		mp = self._host.conf.sysroot(path)
+		r = self._host.runner
+		return r.run(["umount", mp]) == 0
+
+	def bound(self, path):
+		mp = self._host.conf.sysroot(path)
 		f = open("/proc/mounts", "r")
 		for line in f:
 			if line.split()[1] == mp:
 				return True
 		return False
 
-	def tmpmount(self, path, mkdir=False):
-		mp = self._host.conf().sysroot(path)
-		if self.mounted(mp):
-			return True
-		if not os.path.isdir(mp) and mkdir:
-			os.makedirs(mp, 0777)
-		r = self._host.runner
-		return r.run(["mount", "-t", "tmpfs", "none", mp]) == 0
-
-	def tmpumount(self, path):
-		return self.unbind(path)
-
-	def bind(self, path, mp=None):
-		if mp == None:
-			mp = self._host.conf().sysroot(path)
-		if self.mounted(mp):
-			return True
-		r = self._host.runner
-		return r.run(["mount", "--bind", path, mp]) == 0
-
-	def unbind(self, path):
-		mp = self._host.conf().sysroot(path)
-		if not self.mounted(mp):
-			return True
-		r = self._host.runner
-		return r.run(["umount", mp]) == 0

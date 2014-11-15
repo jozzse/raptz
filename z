@@ -11,7 +11,7 @@ from libraptz.multistrap import Multistrap
 from libraptz.apt import Apt
 from libraptz.configure import Configure
 from libraptz.raptzerror import RaptzException
-from libraptz.mount import Mount
+#from libraptz.mount import Mount
 
 # Should be moved to ui?
 class Script:
@@ -26,14 +26,7 @@ class Script:
 		self._host.set_parts(len(self._script))
 		for cmd, kargs in self._script:
 			self._host.start(cmd.__name__)
-			if self._host.conf().debug:
-				cmd(*kargs)
-			else:
-				try:
-					cmd(*kargs)
-				except RaptzException as e:
-					print str(e)
-					return False
+			cmd(*kargs)
 			self._host.done()
 		return True
 
@@ -44,32 +37,48 @@ Raptz sysroot handler
 
   raptz command [options]
 	"""
+	debug=True
 	def __init__(self):
 		self._argp = ArgumentParser(prog="raptz")
-		self._argp.add_argument('-p', '--path', help="Path to sysroot",
-			default="HEJ")
-		self._argp.add_argument("--debug", help="Enable debug mode",
-			 default=False, action='store_true')
 
-		self._argp.add_argument('-n', '--name', help="Configuration name",
-			default="default"
-		)
-		self._argp.add_argument('-l', '--logfile', help="Set logfile (default raptz.log)",
-			default="raptz.log"
-		)
-		self._argp.add_argument('-u', '--ui', help="Ui selection (log, term)",
-			default="term"
-		)
 	def _parse_args(self):
-		self._args = self._argp.parse_args()
-		self._conf = Configuration(self._args)
+		self._argp.add_argument('-p', '--path', default="sysroot",
+			help="Path to sysroot"
+		)
+		self._argp.add_argument("--debug", default=False,
+			action='store_true',
+			help="Enable debug mode"
+		)
+
+		self._argp.add_argument('-n', '--name', default="default",
+			help="Configuration name"
+		)
+		self._argp.add_argument('-l', '--logfile', default="raptz.log",
+			help="Set logfile (default raptz.log)"
+		)
+		self._argp.add_argument('-u', '--ui', default="term",
+			help="Ui selection (log, term)"
+		)
+		self._argp.add_argument('-m', '--mode', default="fake",
+			help="Mode (fake or root)"
+		)
+		args = self._argp.parse_args()
+		self.debug = args.debug
+		self._conf = Configuration(args)
 
 	def chroot(self):
 		""" Chroot into a sysroot """
+		try:
+			i = sys.argv.index("--")
+			cmds = sys.argv[i+1:]
+			sys.argv = sys.argv[0:i]
+		except ValueError:
+			cmds=["bash"]
 		self._parse_args()
+		self._conf.args.ui = "log"
 		host = Host(self._conf)
 		host.fs.mount_system()
-		ret = host.runner.chroot(["bash"])
+		ret = host.runner.chroot(cmds)
 		host.fs.umount_system()
 		return ret
 
@@ -97,7 +106,7 @@ Raptz sysroot handler
 			raise "Unknown mode " + self._conf.args.bootstrap
 		apt = Apt(host)
 		cfg = Configure(host)
-		if self._args.clean:
+		if self._conf.args.clean:
 			sc.add(cfg.clean)
 		sc.add(bsp.bootstrap)
 		sc.add(cfg.debconf)
@@ -111,6 +120,7 @@ Raptz sysroot handler
 		sc.add(apt.update)
 		sc.add(apt.install, self._conf.packages())
 		sc.add(cfg.configure)
+		sc.add(host.fs.umount_system)
 		sc.run()
 		return True
 
@@ -134,8 +144,17 @@ except IndexError:
 ret = 0
 raptz = Raptz()
 func = getattr(raptz, command)
-if not func():
-	ret = 1
+try:
+	if not func():
+		ret = 1
+except RaptzException as e:
+	if raptz.debug:
+		raise
+	else:
+		print
+		print "ERROR: " + str(e)
+		print
+	exit(1)
 
 try:
 	os.wait()

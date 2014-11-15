@@ -27,13 +27,13 @@ class Debootstrap(Bootstrap):
 		if line.startswith("I"):
 			self._host.text(line)
 		else:
-			print line
+			self._host.dbg(line)
 		return True
 
 	def bootstrap(self):
 		""" Will install using debootstrap """
 		cmds=["/usr/sbin/debootstrap", "--variant="+self._variant]
-		conf = self._host.conf()
+		conf = self._host.conf
 
 
 		if conf.arch():

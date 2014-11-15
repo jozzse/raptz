@@ -3,7 +3,7 @@
 import sys
 import os
 import select
-from subprocess import Popen, check_output
+from subprocess import Popen, check_output, call
 
 import shutil
 class ChRoot:
@@ -11,23 +11,25 @@ class ChRoot:
 	_qemusrc = "/usr/bin/qemu-arm-static"
 	def __init__(self, host):
 		self._host = host
-		self._rcddst = host.conf().sysroot("/usr/sbin/policy-rc.d")
-		self._qemudst = host.conf().sysroot(self._qemusrc)
+		self._rcddst = host.conf.sysroot("/usr/sbin/policy-rc.d")
+		self._qemudst = host.conf.sysroot(self._qemusrc)
 
 	def run(self, cmds, env=None, stdoutfunc=None, stderrfunc=None, *kargs):
-		self._host.add_outcb(stdoutfunc, *kargs)
-		self._host.add_errcb(stderrfunc, *kargs)
-		self._host.text("$ " + " ".join(cmds))
-		p = Popen(cmds,
-			stdout=self._host.stdoutfd(), stderr=self._host.stderrfd(),
-			env=env)
-		while p.poll() == None:
-			self._host.poller.poll(0.1)
-		self._host.poller.poll(0.1)
-		ret = p.wait()
-		self._host.remove_outcb(stdoutfunc)
-		self._host.remove_errcb(stderrfunc)
-		return ret
+		stdout = self._host.stdoutfd()
+		stderr = self._host.stderrfd()
+		if stdout != 1 or stderr != 2:
+			self._host.add_outcb(stdoutfunc, *kargs)
+			self._host.add_errcb(stderrfunc, *kargs)
+			self._host.text("$ " + " ".join(cmds))
+			p = Popen(cmds, env=env,
+				stdout=stdout, stderr=stderr)
+			while p.poll() == None:
+				self._host.poller.poll(.01)
+			ret = p.wait()
+			self._host.remove_outcb(stdoutfunc)
+			self._host.remove_errcb(stderrfunc)
+			return ret
+		return call(cmds, env=env)
 
 	def _ch_setup(self):
 		shutil.copy(self._qemusrc, self._qemudst)
@@ -40,9 +42,9 @@ class ChRoot:
 		if os.path.isfile(self._qemudst):
 			os.unlink(self._qemudst)
 
-	def chroot(self, cmds, env=[], stdoutfunc=None, stderrfunc=None, *kargs):
+	def chroot(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
 		self._ch_setup()
-		ch = [ "chroot", self._host.conf().sysroot() ]
+		ch = [ "chroot", self._host.conf.sysroot() ]
 		cmds = ch + cmds
 		oenv = os.environ
 		oenv["HOME"]="/root"
@@ -57,10 +59,17 @@ class ChRoot:
 class FakeRoot(ChRoot):
 	RCDFILE_CONTENT="""#!/bin/dash\nexit 101\n"""
 	_qemusrc = "/usr/bin/qemu-arm-static"
-	def __init__(self, conf):
-		ChRoot.__init__(self, conf)
+	def __init__(self, host):
+		ChRoot.__init__(self, host)
 
-	def run(self, cmds, env=None, stdoutfunc=None, stderrfunc=None, *kargs):
-		cmds = ["fakechroot", "fakeroot" ] + cmds
+	def run(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
+		envfile = self._host.conf.sysroot("/lib/fake.env")
+		fakecmd = [ "fakechroot", 
+			"fakeroot", 
+			"-s", envfile,
+			"-i", envfile,
+		]
+		cmds = fakecmd + cmds
+		env["FAKECHROOT_EXCLUDE_PATH"] = self._host.fs.binds()
 		return ChRoot.run(self, cmds, env, stdoutfunc, stderrfunc, *kargs)
 
