@@ -1,0 +1,36 @@
+#!/bin/sh
+
+newroot=$(pwd)/$1
+echo "***"
+echo "raptz $RAPTZ_PATH"
+echo "cmd: $0"
+echo "args: $*"
+echo "newroot: $newroot"
+export FAKECHROOT_CMD_SUBST=""
+echo $FAKECHROOT_CMD_SUBST
+fakechroot_chroot_base="$FAKECHROOT_BASE_ORIG"
+
+
+library_path=\
+$newroot/usr/local/lib/arm-linux-gnueabi:\
+$newroot/usr/local/lib:\
+$newroot/usr/lib/arm-linux-gnueabi:\
+$newroot/usr/lib:\
+$newroot/lib/arm-linux-gnueabi:\
+$newroot/lib
+echo $library_path
+
+env -u \
+	FAKECHROOT_BASE_ORIG \
+	FAKECHROOT_CMD_ORIG= \
+	FAKECHROOT_BASE="$fakechroot_chroot_base" \
+	LD_LIBRARY_PATH=$library_path \
+	FAKECHROOT_ELFLOADER=$newroot/lib/ld-linux.so.3 \
+	$newroot/usr/sbin/chroot $newroot /bin/sh
+#LD_PRELOAD=/home/jz/src/raptz/root/usr/lib/arm-linux-gnueabi/fakechroot/libfakechroot.so \
+#env -u \
+#	FAKECHROOT_BASE_ORIG \
+#	FAKECHROOT_CMD_ORIG= \
+#	FAKECHROOT_BASE="$fakechroot_chroot_base" \
+#	LD_LIBRARY_PATH=$newroot/lib \
+#	/usr/sbin/chroot $newroot /lib/ld-linux.so.3 $newroot/bin/sh
