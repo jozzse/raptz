@@ -55,7 +55,6 @@ class ChRoot:
 		self._ch_setdown()
 		return ret
 
-
 class FakeRoot(ChRoot):
 	RCDFILE_CONTENT="""#!/bin/dash\nexit 101\n"""
 	_qemusrc = "/usr/bin/qemu-arm-static"
@@ -69,7 +68,30 @@ class FakeRoot(ChRoot):
 			"-s", envfile,
 			"-i", envfile,
 		]
+			#"-c", "fcr",
 		cmds = fakecmd + cmds
 		env["FAKECHROOT_EXCLUDE_PATH"] = self._host.fs.binds()
 		return ChRoot.run(self, cmds, env, stdoutfunc, stderrfunc, *kargs)
+
+	def chroot(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
+		self.copy_ld()
+		return ChRoot.chroot(self, cmds, env, stdoutfunc, stderrfunc, *kargs)
+
+	def copy_ld(self):
+		libdir=self._host.conf.sysroot("lib")
+		ld = os.path.join(libdir, "ld-linux.so.3")
+		lddst = os.path.join(libdir, os.readlink(ld))
+		ldln = "/lib/ld-linux.so.3"
+		try:
+			ldsrc = os.readlink(ldln)
+			if ldsrc == lddst:
+				return True
+		except:
+			pass
+		print "Change"
+		cmd=["ln", "-sf", lddst, ldln]
+		if os.getuid() != 0:
+			print "SUDO"
+			cmd = ["sudo"] + cmd
+		return call(cmd) == 0
 
