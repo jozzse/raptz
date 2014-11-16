@@ -1,6 +1,0 @@
-
-proc			/proc		proc	defaults	0	0
-rootfs			/			auto	relatime	0	0
-/dev/mmcblk0p1  /boot   	vfat    defaults    0   1
-tmpfs			/tmp		tmpfs	relatime	0	1
-tmpfs			/var/log	tmpfs	relatime 	0	1

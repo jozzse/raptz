@@ -6,39 +6,32 @@ Directory structure
 -------------------
 
 top-dir
- +- default -> <confdir> - A soft link pointing to the default confdir
  +- <confdir>            - The name of the sysroot (emdebian). 
- |  +- multistrap.cfg    - The multistrap configuration file
- |  +- root              - Extra root files for the enviroment
- |  +- conf              - Configuration files
- |     +-<nn><name>      - Configuration directory
- |       +- init.sh      - Optional init script
- |       +- init.dev.sh  - Optional init script for development
- +- ui                   - UIs folder
-    +- <name>ui.inc      - UI output script
-    +- baseui.inc        - Common ui.
+    +- raptz.cfg         - The multistrap configuration file
+    +- root              - Extra root files for the enviroment
+    +- conf              - Configuration files
+       +-<nn><name>      - Configuration directory
+         +- init.sh      - Optional init script
+         +- init.dev.sh  - Optional init script for development
 
 
 Basics to get a sysroot (raptz mksys)
 =====================================
 
-Step 1 - Multistrap (raptz mksys)
+Step 1 - Install sysroot (raptz mksys)
 ---------------------------------
 
-The <confdir>/multistrap.cfg file is used when multistrapping. Default
-location of sysroot is /opt/<confdir>
-The <confdir>/multistrap.cfg file should only contain the absolute basics for
-your sysroot. Install extra packages with raptz script described below.
+The <confdir>/raptz.cfg file is used when raptz.
 
-
-Since multistrapping does not setup a complete system (configuration on target
-architecture is needed for example) after multistrapping the <confdir>/root folder is copied to the sysroot. Files 
-are copyed if newer than the file on sysroot or it does not exist on sysroot. 
+Since multistrapping does not setup a complete system (configuration on
+target architecture is needed for example) after multistrapping the
+<confdir>/root folder is copied to the sysroot. Files are copyed if newer than
+the file on sysroot or it does not exist on sysroot.
 This move makes them a part of the main sysroot.
 
-After the each directory in <confdir>/conf/ folder is copied to a temporary 
-directory in the sysroot and it's init scripts will be executed in a qemu enviroment.
-The number of the directory name specified the order of execution.
-Execution is done within a qemu-static chroot with the temporary directory included
-with the first argument. 
+After the each directory in <confdir>/conf/ folder is copied to a temporary
+directory in the sysroot and it's init scripts will be executed in a qemu
+enviroment. The number of the directory name specified the order of execution.
+Execution is done within a qemu-static chroot with the temporary directory
+included with the first argument.
 
