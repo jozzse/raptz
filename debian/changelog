@@ -1,3 +1,9 @@
+raptz (0.2.0) UNRELEASED; urgency=medium
+
+  * Second version
+
+ -- Jonas Zetterberg <jz@agda>  Sun, 16 Nov 2014 23:05:29 +0100
+
 raptz (0.1.0) unstable; urgency=low
 
   * Initial Release.

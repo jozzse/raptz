@@ -11,6 +11,7 @@ from libraptz.multistrap import Multistrap
 from libraptz.apt import Apt
 from libraptz.configure import Configure
 from libraptz.raptzerror import RaptzException
+import libraptz.comp as comp
 #from libraptz.mount import Mount
 
 # Should be moved to ui?
@@ -81,6 +82,38 @@ Raptz sysroot handler
 		ret = host.runner.chroot(cmds)
 		host.fs.umount_system()
 		return ret
+
+	def tar(self):
+		""" Create one or multiple compressed tar files """
+		self._comp(comp.Tar)
+
+	def cpio(self):
+		""" Create one or multiple compressed cpio files """
+		self._comp(comp.Cpio)
+
+	def _comp(self, basetype):
+		self._argp.add_argument("-t", "--tar", default=None,
+			help="Create a uncompressed tar file")
+		self._argp.add_argument("-g", "--gzip", default=None,
+			help="Create a gzip compressed tar file")
+		self._argp.add_argument("-b", "--bzip2", default=None,
+			help="Create a bzip2 compressed tar file")
+		self._argp.add_argument("-x", "--xz", default=None,
+			help="Create a xz compressed tar file")
+		self._parse_args()
+		self._conf.args.ui = "log"
+		host = Host(self._conf)
+		tar = basetype(host)
+		if self._conf.args.tar and self._conf.args.tar != "":
+			tar.add(comp.Cat(self._conf.args.tar))
+		if self._conf.args.gzip and self._conf.args.gzip != "":
+			tar.add(comp.GZip(self._conf.args.gzip))
+		if self._conf.args.bzip2 and self._conf.args.bzip2 != "":
+			tar.add(comp.BZip2(self._conf.args.bzip2))
+		if self._conf.args.xz and self._conf.args.xz != "":
+			tar.add(comp.XZ(self._conf.args.xz))
+		tar.compress()
+
 
 	def mksys(self):
 		""" Create a sysroot """

@@ -4,8 +4,8 @@ if __name__=="__main__":
 	import os
 
 	targets=[]
-	for td in ["igepv2", "igepv2_sid"]:
-		for root, dirs, files in os.walk("igepv2"):
+	for td in ["sid"]:
+		for root, dirs, files in os.walk(td):
 			fs = []
 			for f in files:
 				fs.append(os.path.join(root, f))
@@ -17,8 +17,8 @@ if __name__=="__main__":
 		author='Jonas Zetteberg',
 		author_email='jozz@jozz.se',
 		url='http://jozz.no-ip.org/wiki/igep/emdebian/installer/raptz', # Fixme: make site
-		scripts=['raptz.py',"raptz", "graptz"],
-		packages=("Raptz", "Raptz.ui",),
+		scripts=['raptz'],
+		packages=('libraptz',),
 		data_files=targets
 		)
 

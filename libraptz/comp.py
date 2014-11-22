@@ -3,7 +3,7 @@ import os
 import select
 from subprocess import Popen, PIPE
 
-class Tar:
+class InFile:
 	_outputs = []
 	def __init__(self, host):
 		self._host = host
@@ -11,73 +11,111 @@ class Tar:
 	def add(self, output):
 		self._outputs.append(output)
 
-	def write(self):
+	def compress(self):
+		raise
+
+	def write(self, cmd, sin=None):
 		inlen=0
-		sysroot = self._host.conf.sysroot()
-		cmd=["tar", "cf", "-", sysroot] # tar to output
 		self._fds = [ o.open() for o in self._outputs]
 
-		p = Popen(cmd, stdout=PIPE)
+		stdin=None
+		selin=[]
+		if sin:
+			stdin=PIPE
+		p = Popen(cmd, stdout=PIPE, stdin=stdin)
+
+		selout=[p.stdout.fileno()]
+		if sin:
+			selin =[p.stdin.fileno()]
 		while p.poll() == None:
-			d = p.stdout.read(select.PIPE_BUF)
-			inlen+=len(d)
-			for f in self._fds:
-				f.write(d)
+			ret = select.select(selout, selin, [], 1)
+			if ret[1] != []:
+				w = sin()
+				if w == None:
+					p.stdin.close()
+					selin=[]
+					continue
+				p.stdin.write(w+"\n")
+			elif ret[0] != []:
+				d = p.stdout.read(select.PIPE_BUF)
+				inlen+=len(d)
+				for f in self._fds:
+					f.write(d)
 		p.wait()
+		d="A"
 		while len(d):
 			d = p.stdout.read(select.PIPE_BUF)
-			p.stdout.flush()
 			inlen+=len(d)
 			for f in self._fds:
 				f.write(d)
 				f.flush()
-			if len(d) == 0:
-				ok = True
 		#print poller.poll(.01)
-		print "Wait", inlen
+		print "Archive is", inlen
 		for f in self._fds:
 			f.close()
 		for o in self._outputs:
 			o.close()
 
+class Cpio(InFile):
+	def compress(self):
+		self._flist = []
+		sysroot = self._host.conf.sysroot()
+		sl = len(sysroot)+1
+		for root, dirs, files in os.walk(sysroot):
+			for d in dirs:
+				self._flist.append(os.path.join(root, d)[sl:])
+			for f in files:
+				self._flist.append(os.path.join(root, f)[sl:])
+		cwd = os.getcwd()
+		os.chdir(sysroot)
+		cmd=["cpio", "-o"]
+		ret = self.write(cmd, self._stdin)
+		os.chdir(cwd)
+		return ret
+
+	def _stdin(self):
+		if self._flist == []:
+			return None
+		return self._flist.pop(0)
+
+class Tar(InFile):
+	def compress(self):
+		sysroot = self._host.conf.sysroot()
+		cmd=["tar", "-c", "-f", "-", "-C",  sysroot, "."] # tar to output
+		return self.write(cmd)
+
 class OutputFile:
 	def __init__(self, filename):
 		self._filename = filename
-		self._fd = os.open(self._filename, os.O_WRONLY | os.O_CREAT)
+		self._file = open(self._filename, "wb")
 
 	def open(self):
 		raise
 
 	def close(self):
-		os.close(self._fd)
+		self._file.close()
 
 class OutputPipe(OutputFile):
-	def __init__(self, filename, prog):
+	def __init__(self, filename):
 		OutputFile.__init__(self, filename)
-		self._prog = prog
 
 	def open(self):
-		self._p = Popen([self._prog], stdout=self._fd, stdin=PIPE)
+		self._p = Popen(self._prog, stdout=self._file.fileno(), stdin=PIPE)
 		return self._p.stdin
-	
+
 	def close(self):
 		self._p.wait()
 		OutputFile.close(self)
 
 class Cat(OutputPipe):
-	def __init__(self, filename):
-		OutputPipe.__init__(self, filename, "cat")
+	_prog=["cat"]
 
 class GZip(OutputPipe):
-	def __init__(self, filename):
-		OutputPipe.__init__(self, filename, "pigz")
+	_prog=["pigz", "-c"]
 
 class BZip2(OutputPipe):
-	def __init__(self, filename):
-		OutputPipe.__init__(self, filename, "bzip2")
+	_prog=["pbzip2"]
 
 class XZ(OutputPipe):
-	def __init__(self, filename):
-		OutputPipe.__init__(self, filename, "xz")
-
+	_prog=["pxz"]
 
