@@ -3,6 +3,7 @@ import os
 from subprocess import call
 import time
 import atexit
+from config import config
 
 def umount_all(base):
 	f = open("/proc/mounts", "r")
@@ -75,21 +76,21 @@ class FakeFs(Fs):
 class RootFs(Fs):
 	def __init__(self, host):
 		self._host = host
-		atexit.register(umount_all, self._host.conf.sysroot())
+		atexit.register(umount_all, config.sysroot())
 
 	def bind(self, path):
-		mp = self._host.conf.sysroot(path)
+		mp = config.sysroot(path)
 		r = self._host.runner
 		ret = r.run(["mount", "--bind", path, mp]) == 0
 		return ret
 
 	def unbind(self, path):
-		mp = self._host.conf.sysroot(path)
+		mp = config.sysroot(path)
 		r = self._host.runner
 		return r.run(["umount", mp]) == 0
 
 	def bound(self, path):
-		mp = self._host.conf.sysroot(path)
+		mp = config.sysroot(path)
 		f = open("/proc/mounts", "r")
 		for line in f:
 			if line.split()[1] == mp:

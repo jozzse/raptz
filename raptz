@@ -4,12 +4,12 @@ import sys
 import os
 
 from libraptz.host import Host
-from libraptz.configuration import Configuration
+from libraptz.config import config
+from libraptz.configure import Configure
 from libraptz.cdebootstrap import CDebootstrap
 from libraptz.debootstrap import Debootstrap
 from libraptz.multistrap import Multistrap
 from libraptz.apt import Apt
-from libraptz.configure import Configure
 from libraptz.raptzerror import RaptzException
 import libraptz.comp as comp
 #from libraptz.mount import Mount
@@ -31,7 +31,6 @@ class Script:
 			self._host.done()
 		return True
 
-from argparse import ArgumentParser
 class Raptz:
 	"""
 Raptz sysroot handler
@@ -39,34 +38,6 @@ Raptz sysroot handler
   raptz command [options]
 	"""
 	debug=True
-	def __init__(self):
-		self._argp = ArgumentParser(prog="raptz")
-
-	def _parse_args(self):
-		self._argp.add_argument('-p', '--path', default="sysroot",
-			help="Path to sysroot"
-		)
-		self._argp.add_argument("--debug", default=False,
-			action='store_true',
-			help="Enable debug mode"
-		)
-
-		self._argp.add_argument('-n', '--name', default="default",
-			help="Configuration name"
-		)
-		self._argp.add_argument('-l', '--logfile', default="raptz.log",
-			help="Set logfile (default raptz.log)"
-		)
-		self._argp.add_argument('-u', '--ui', default="term",
-			help="Ui selection (log, term)"
-		)
-		self._argp.add_argument('-m', '--mode', default="fake",
-			help="Mode (fake or root)"
-		)
-		args = self._argp.parse_args()
-		self.debug = args.debug
-		self._conf = Configuration(args)
-
 	def chroot(self):
 		""" Chroot into a sysroot """
 		try:
@@ -75,9 +46,9 @@ Raptz sysroot handler
 			sys.argv = sys.argv[0:i]
 		except ValueError:
 			cmds=["bash"]
-		self._parse_args()
-		self._conf.args.ui = "log"
-		host = Host(self._conf)
+		config.setup()
+		config.args.ui = "log"
+		host = Host()
 		host.fs.mount_system()
 		ret = host.runner.chroot(cmds)
 		host.fs.umount_system()
@@ -92,54 +63,53 @@ Raptz sysroot handler
 		self._comp(comp.Cpio)
 
 	def _comp(self, basetype):
-		self._argp.add_argument("-t", "--tar", default=None,
+		argp.add_argument("-t", "--tar", default=None,
 			help="Create a uncompressed tar file")
-		self._argp.add_argument("-g", "--gzip", default=None,
+		argp.add_argument("-g", "--gzip", default=None,
 			help="Create a gzip compressed tar file")
-		self._argp.add_argument("-b", "--bzip2", default=None,
+		argp.add_argument("-b", "--bzip2", default=None,
 			help="Create a bzip2 compressed tar file")
-		self._argp.add_argument("-x", "--xz", default=None,
+		argp.add_argument("-x", "--xz", default=None,
 			help="Create a xz compressed tar file")
-		self._parse_args()
-		self._conf.args.ui = "log"
-		host = Host(self._conf)
-		tar = basetype(host)
-		if self._conf.args.tar and self._conf.args.tar != "":
-			tar.add(comp.Cat(self._conf.args.tar))
-		if self._conf.args.gzip and self._conf.args.gzip != "":
-			tar.add(comp.GZip(self._conf.args.gzip))
-		if self._conf.args.bzip2 and self._conf.args.bzip2 != "":
-			tar.add(comp.BZip2(self._conf.args.bzip2))
-		if self._conf.args.xz and self._conf.args.xz != "":
-			tar.add(comp.XZ(self._conf.args.xz))
+		config.setup()
+		tar = basetype(config.sysroot())
+		if config.args.tar and config.args.tar != "":
+			tar.add(comp.Cat(config.args.tar))
+		if config.args.gzip and config.args.gzip != "":
+			tar.add(comp.GZip(config.args.gzip))
+		if config.args.bzip2 and config.args.bzip2 != "":
+			tar.add(comp.BZip2(config.args.bzip2))
+		if config.args.xz and config.args.xz != "":
+			tar.add(comp.XZ(config.args.xz))
 		tar.compress()
 
 
 	def mksys(self):
 		""" Create a sysroot """
-		self._argp.add_argument("-c", "--clean", help="Clean the sysroot before building",
+		argp = config.get_argparser()
+		argp.add_argument("-c", "--clean", help="Clean the sysroot before building",
 			 default=False, action='store_true')
-		self._argp.add_argument("-D", "--dev", help="Run development parts of configuration",
+		argp.add_argument("-D", "--dev", help="Run development parts of configuration",
 			 default=False, action='store_true')
-		self._argp.add_argument("-S", "--suite", help="Set different suite to install",
+		argp.add_argument("-S", "--suite", help="Set different suite to install",
 			default=None)
-		self._argp.add_argument("-b", "--bootstrap", default="multistrap",
+		argp.add_argument("-b", "--bootstrap", default="multistrap",
 			help="bootstrap mode (multstrap*, debootstrap, cdebootstrap)"
 		)
-		self._parse_args()
-		host = Host(self._conf)
+		config.setup()
+		host = Host()
 		sc = Script(host)
-		if self._conf.args.bootstrap == "multistrap":
+		if config.args.bootstrap == "multistrap":
 			bsp = Multistrap(host)
-		elif self._conf.args.bootstrap == "debootstrap":
+		elif config.args.bootstrap == "debootstrap":
 			bsp = Debootstrap(host)
-		elif self._conf.args.bootstrap == "cdebootstrap":
+		elif config.args.bootstrap == "cdebootstrap":
 			bsp = CDebootstrap(host)
 		else:
-			raise "Unknown mode " + self._conf.args.bootstrap
+			raise "Unknown mode " + config.args.bootstrap
 		apt = Apt(host)
 		cfg = Configure(host)
-		if self._conf.args.clean:
+		if config.args.clean:
 			sc.add(cfg.clean)
 		sc.add(bsp.bootstrap)
 		sc.add(cfg.debconf)
@@ -149,9 +119,9 @@ Raptz sysroot handler
 		
 		sc.add(host.fs.mount_system)
 		sc.add(apt.update)
-		sc.add(apt.install, self._conf.keyrings())
+		sc.add(apt.install, config.keyrings())
 		sc.add(apt.update)
-		sc.add(apt.install, self._conf.packages())
+		sc.add(apt.install, config.packages())
 		sc.add(cfg.configure)
 		sc.add(host.fs.umount_system)
 		sc.run()

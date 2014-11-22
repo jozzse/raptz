@@ -4,6 +4,7 @@ import sys
 import os
 import select
 from subprocess import Popen, check_output, call
+from config import config
 
 import shutil
 class ChRoot:
@@ -11,8 +12,8 @@ class ChRoot:
 	_qemusrc = "/usr/bin/qemu-arm-static"
 	def __init__(self, host):
 		self._host = host
-		self._rcddst = host.conf.sysroot("/usr/sbin/policy-rc.d")
-		self._qemudst = host.conf.sysroot(self._qemusrc)
+		self._rcddst = config.sysroot("/usr/sbin/policy-rc.d")
+		self._qemudst = config.sysroot(self._qemusrc)
 
 	def run(self, cmds, env=None, stdoutfunc=None, stderrfunc=None, *kargs):
 		stdout = self._host.stdoutfd()
@@ -44,7 +45,7 @@ class ChRoot:
 
 	def chroot(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
 		self._ch_setup()
-		ch = [ "chroot", self._host.conf.sysroot() ]
+		ch = [ "chroot", config.sysroot() ]
 		cmds = ch + cmds
 		oenv = os.environ
 		oenv["HOME"]="/root"
@@ -62,7 +63,7 @@ class FakeRoot(ChRoot):
 		ChRoot.__init__(self, host)
 
 	def run(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
-		envfile = self._host.conf.sysroot("/lib/fake.env")
+		envfile = config.sysroot("/lib/fake.env")
 		fakecmd = [ "fakechroot", 
 			"fakeroot", 
 			"-s", envfile,
@@ -78,7 +79,7 @@ class FakeRoot(ChRoot):
 		return ChRoot.chroot(self, cmds, env, stdoutfunc, stderrfunc, *kargs)
 
 	def copy_ld(self):
-		libdir=self._host.conf.sysroot("lib")
+		libdir=config.sysroot("lib")
 		ld = os.path.join(libdir, "ld-linux.so.3")
 		lddst = os.path.join(libdir, os.readlink(ld))
 		ldln = "/lib/ld-linux.so.3"

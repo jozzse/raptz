@@ -2,6 +2,7 @@
 
 from raptzerror import RaptzException
 from bootstrap import Bootstrap
+from config import config
 
 class CDebootstrap(Bootstrap):
 	_flavour="minimal"
@@ -32,22 +33,21 @@ class CDebootstrap(Bootstrap):
 
 	def bootstrap(self):
 		""" Will install using debootstrap """
-		conf = self._host.conf
 		cmds=["cdebootstrap", "--flavour="+self._flavour]
 
-		if conf.arch():
+		if config.arch():
 			cmds.append("--foreign")
-			cmds.append("--arch="+conf.arch())
-		if not conf.auth():
+			cmds.append("--arch="+config.arch())
+		if not config.auth():
 			cmds.append("--allow-unauthenticated")
 
-		keyrings = conf.keyrings()
+		keyrings = config.keyrings()
 		for keyring in keyrings:
 			cmds.append("--keyring="+keyring)
 
-		cmds.append(conf.suite())
-		cmds.append(conf.sysroot())
-		cmds.append(conf.source())
+		cmds.append(config.suite())
+		cmds.append(config.sysroot())
+		cmds.append(config.source())
 #		cmds.append("/usr/share/debootstrap/scripts/testing")
 		r = self._host.runner
 

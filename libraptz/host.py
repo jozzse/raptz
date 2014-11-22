@@ -9,27 +9,27 @@ from ui import UiLog, UiTerm
 from fs import FakeFs, RootFs
 from raptzerror import RaptzException
 
+from config import config
 
 class Host():
-	def __init__(self, conf):
+	def __init__(self):
 		self._stdoutfd = sys.stdout.fileno()
 		self._stderrfd = sys.stderr.fileno()
-		self.conf = conf
-		self._log = open(self.conf.args.logfile, "w")
+		self._log = open(config.args.logfile, "w")
 		self._outcb = {}
 		self._errcb = {}
 		self._outline = ""
 		self._errline = ""
 		self.poller = CbPoller()
-		if conf.args.ui == "term":
+		if config.args.ui == "term":
 			self._ui = UiTerm()
 			self.redirout()
 		else:
 			self._ui = UiLog()
-		if conf.args.mode == "fake":
+		if config.args.mode == "fake":
 			self.fs = FakeFs(self)
 			self.runner = FakeRoot(self)
-		elif conf.args.mode == "root":
+		elif config.args.mode == "root":
 			if os.getuid() != 0:
 				raise RaptzException("You shall be root to run in root mode")
 			self.fs = RootFs(self)
@@ -40,9 +40,6 @@ class Host():
 		self.poller.add(pin, self._stdout)
 		pin, self._stderrfd = os.pipe()
 		self.poller.add(pin, self._stderr)
-
-	def conf(self):
-		return self.conf
 
 	def set_parts(self, parts):
 		self._ui._parts = parts
@@ -109,7 +106,7 @@ class Host():
 		self._ui.warn(text)
 
 	def dbg(self, text):
-		if self.conf.args.debug:
+		if config.args.debug:
 			self._ui.dbg(text)
 
 	def progress(self, prog, text=None):

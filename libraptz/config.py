@@ -5,15 +5,43 @@ import os
 import select
 from subprocess import Popen, check_output
 from ConfigParser import SafeConfigParser, NoOptionError
+from argparse import ArgumentParser
 
 
-class Configuration:
-	def __init__(self, args):
+class Config:
+	def __init__(self):
+		config = self
+		self._argp = ArgumentParser(prog="raptz")
+		self._argp.add_argument('-p', '--path', default="sysroot",
+			help="Path to sysroot"
+		)
+		self._argp.add_argument("--debug", default=False,
+			action='store_true',
+			help="Enable debug mode"
+		)
+		self._argp.add_argument('-n', '--name', default="default",
+			help="Configuration name"
+		)
+		self._argp.add_argument('-l', '--logfile', default="raptz.log",
+			help="Set logfile (default raptz.log)"
+		)
+		self._argp.add_argument('-u', '--ui', default="term",
+			help="Ui selection (log, term)"
+		)
+		self._argp.add_argument('-m', '--mode', default="fake",
+			help="Mode (fake or root)"
+		)
+
+	def get_argparser(self):
+		return self._argp
+
+	def setup(self):
+		args = self._argp.parse_args()
+		self.args = args
 		self._sysroot = os.path.abspath(args.path)
 		self._confpath = os.path.abspath(args.name)
 		self._config = SafeConfigParser()
 		self._config.read(os.path.join(self._confpath, "raptz.cfg"))
-		self.args = args
 		self.debug = args.debug
 
 	def repros(self):
@@ -87,3 +115,6 @@ class Configuration:
 		if path.startswith("/"):
 			return os.path.join(self._confpath, path[1:])
 		return os.path.join(self._confpath, path)
+
+global config
+config = Config()

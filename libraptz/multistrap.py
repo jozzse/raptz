@@ -6,6 +6,7 @@ import time
 import tempfile
 import shutil
 from ConfigParser import SafeConfigParser
+from config import config
 
 
 class Multistrap(Bootstrap):
@@ -17,25 +18,24 @@ class Multistrap(Bootstrap):
 		self._done=0
 	def bootstrap(self):
 		# Lets build the multistrap configuration file
-		conf = self._host.conf
 		par = SafeConfigParser()
 		par.add_section("General")
-		par.set("General", "arch", conf.arch())
-		par.set("General", "directory", conf.sysroot())
+		par.set("General", "arch", config.arch())
+		par.set("General", "directory", config.sysroot())
 		par.set("General", "cleanup", str(True))
-		par.set("General", "noauth", str(not conf.auth()))
-		keyrings = conf.keyrings()
+		par.set("General", "noauth", str(not config.auth()))
+		keyrings = config.keyrings()
 		par.set("General", "bootstrap", " ".join(keyrings.keys()))
-		repros = conf.repros()
+		repros = config.repros()
 		par.set("General", "aptsources", " ".join(repros))
 
-		for repro in conf.repros():
+		for repro in config.repros():
 			par.add_section(repro)
 			par.set(repro, "keyring", keyrings[repro])
-			par.set(repro, "packages", "dash apt apt-utils " + " ".join(conf.early_packages()))
-			par.set(repro, "source", conf.source(repro))
-			par.set(repro, "suite", conf.suite(repro))
-			par.set(repro, "components", " ".join(conf.components(repro)))
+			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages()))
+			par.set(repro, "source", config.source(repro))
+			par.set(repro, "suite", config.suite(repro))
+			par.set(repro, "components", " ".join(config.components(repro)))
 		par.write(self._msfile)
 		self._msfile.close()
 		r = self._host.runner
@@ -91,8 +91,7 @@ class Multistrap(Bootstrap):
 		return True
 	
 	def finalize(self):
-		conf = self._host.conf
-		listd = conf.sysroot("/etc/apt/sources.list.d")
+		listd = config.sysroot("/etc/apt/sources.list.d")
 		if os.path.isdir(listd):
 			shutil.rmtree(listd)
 		Bootstrap.finalize(self)

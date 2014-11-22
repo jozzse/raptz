@@ -1,9 +1,9 @@
 import os
+from config import config
 
 class Bootstrap:
 	def __init__(self, host):
 		self._host = host
-
 
 	def bootstrap(self):
 		# The stage where nothing is mounted
@@ -14,18 +14,17 @@ class Bootstrap:
 		pass
 	
 	def finalize(self):
-		conf = self._host.conf
-		listd = conf.sysroot("/etc/apt/sources.list.d")
+		listd = config.sysroot("/etc/apt/sources.list.d")
 
 		if not os.path.isdir(listd):
 			os.makedirs(listd)
-		for repro in conf.repros():
+		for repro in config.repros():
 			listfile = os.path.join(listd, repro.lower() + ".list")
-			source = conf.source(repro)
-			suite = conf.suite(repro)
-			comp = " ".join(conf.components(repro))
+			source = config.source(repro)
+			suite = config.suite(repro)
+			comp = " ".join(config.components(repro))
 			f = open(listfile, "w")
 			f.write("deb %s %s %s\n" % (source, suite, comp))
-			if conf.addsrcs(repro):
+			if config.addsrcs(repro):
 				f.write("deb-src %s %s %s\n" % (source, suite, comp))
 

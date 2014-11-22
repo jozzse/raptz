@@ -2,6 +2,7 @@
 
 from raptzerror import RaptzException
 from bootstrap import Bootstrap
+from config import config
 
 class Debootstrap(Bootstrap):
 	_variant="minbase"
@@ -33,22 +34,20 @@ class Debootstrap(Bootstrap):
 	def bootstrap(self):
 		""" Will install using debootstrap """
 		cmds=["/usr/sbin/debootstrap", "--variant="+self._variant]
-		conf = self._host.conf
 
-
-		if conf.arch():
+		if config.arch():
 			cmds.append("--foreign")
-			cmds.append("--arch="+conf.arch())
-		if not conf.auth():
+			cmds.append("--arch="+config.arch())
+		if not config.auth():
 			cmds.append("--no-check-gpg")
 
-		keyrings = conf.keyrings()
+		keyrings = config.keyrings()
 		for keyring in keyrings:
 			cmds.append("--keyring="+keyring)
 
-		cmds.append(conf.suite())
-		cmds.append(conf.sysroot())
-		cmds.append(conf.source())
+		cmds.append(config.suite())
+		cmds.append(config.sysroot())
+		cmds.append(config.source())
 		cmds.append("/usr/share/debootstrap/scripts/testing")
 		r = self._host.runner
 
