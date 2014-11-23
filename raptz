@@ -37,13 +37,11 @@ Raptz sysroot handler
 	debug=True
 	def chroot(self):
 		""" Chroot into a sysroot """
-		try:
-			i = sys.argv.index("--")
-			cmds = sys.argv[i+1:]
-			sys.argv = sys.argv[0:i]
-		except ValueError:
-			cmds=["bash"]
 		config.setup()
+		if config.arg_pass:
+			cmds = config.arg_pass
+		else:
+			cmds=["bash"]
 		config.args.ui = "log"
 		host.setup()
 		host.fs.mount_system()
@@ -115,7 +113,6 @@ Raptz sysroot handler
 		sc.add(bsp.secondstage)
 		sc.add(cfg.copyroot)
 		sc.add(bsp.finalize)
-		
 		sc.add(host.fs.mount_system)
 		sc.add(apt.update)
 		sc.add(apt.install, config.keyrings())
@@ -136,16 +133,9 @@ Raptz sysroot handler
 			print "  %-10s - %s" %(m, getattr(self, m).__doc__)
 		print ""
 
-command="help"
-try:
-	command=sys.argv[1]
-	del sys.argv[1]
-except IndexError:
-	pass
-
 ret = 0
 raptz = Raptz()
-func = getattr(raptz, command)
+func = getattr(raptz, config.arg_command)
 try:
 	ret = func()
 except RaptzException as e:

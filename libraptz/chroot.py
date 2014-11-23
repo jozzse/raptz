@@ -18,6 +18,13 @@ class ChRoot:
 	def run(self, cmds, env=None, stdoutfunc=None, stderrfunc=None, *kargs):
 		stdout = self._host.stdoutfd()
 		stderr = self._host.stderrfd()
+		renv = os.environ
+		if env:
+			for key, value in env.items():
+				renv[key] = value
+		for key, value in self._host.fs.env().items():
+			renv[key] = value
+
 		if stdout != 1 or stderr != 2:
 			self._host.add_outcb(stdoutfunc, *kargs)
 			self._host.add_errcb(stderrfunc, *kargs)
@@ -30,7 +37,7 @@ class ChRoot:
 			self._host.remove_outcb(stdoutfunc)
 			self._host.remove_errcb(stderrfunc)
 			return ret
-		return call(cmds, env=env)
+		return call(cmds, env=renv)
 
 	def _ch_setup(self):
 		shutil.copy(self._qemusrc, self._qemudst)

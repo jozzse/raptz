@@ -48,6 +48,9 @@ class Fs:
 				self._host.warn("Failed to unmount " + mp)
 		return ok
 
+	def env(self):
+		return {}
+
 	def bound(self, mp):
 		raise
 
@@ -70,8 +73,8 @@ class FakeFs(Fs):
 	def bound(self, mp):
 		return mp in self._binds
 
-	def binds(self):
-		return ":".join(self._binds)
+	def env(self):
+		return { "FAKECHROOT_EXCLUDE_PATH" : ":".join(self._binds) }
 
 class RootFs(Fs):
 	def __init__(self, host):

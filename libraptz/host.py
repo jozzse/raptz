@@ -29,14 +29,15 @@ class Host():
 			self.redirout()
 		else:
 			self._ui = UiLog()
+		
+		#self.runner = FakeRoot(self)
+		self.runner = ChRoot(self)
 		if config.args.mode == "fake":
 			self.fs = FakeFs(self)
-			self.runner = FakeRoot(self)
 		elif config.args.mode == "root":
 			if os.getuid() != 0:
 				raise RaptzException("You shall be root to run in root mode")
 			self.fs = RootFs(self)
-			self.runner = ChRoot(self)
 
 	def redirout(self):
 		pin, self._stdoutfd = os.pipe()

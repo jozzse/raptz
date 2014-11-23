@@ -1,26 +1,29 @@
 #!/bin/bash
 
+mode=fake
+if [ "$(whoami)" = "root" ]; then
+	mode=root
+fi
 set -e
 
-
-mkdir -p testroot
+mkdir -p tst$mode
 _test()
 {
-	sys=testroot/$1
+	sys=tst$mode/$1
 	echo "$sys mksys"
-	./raptz mksys -n sid -p $sys -b $1 -m root -u log >${sys}.mksys.log 2>&1
+	./raptz mksys -n sid -p $sys -b $1 -m $mode -u log >${sys}.mksys.log 2>&1
 	echo "$sys cpio"
-	./raptz cpio -n sid -p $sys -x ${sys}.cpio.xz
+	./raptz cpio -n sid -p $sys -m $mode -x ${sys}.cpio.xz 
 	echo "$sys tar"
-	./raptz tar -n sid -p $sys -r ${sys}.tar -g ${sys}.tar.gz -b${sys}.tar.bz2
+	./raptz tar -n sid -p $sys -m $mode -r ${sys}.tar -g ${sys}.tar.gz -b${sys}.tar.bz2
 	echo "$sys chroot pipe"
-	RET=$(echo "echo ok1" | ./raptz chroot -n sid -p $sys -m root)
+	RET=$(echo "echo ok1" | ./raptz chroot -n sid -p $sys -m $mode)
 	[ "$RET" = "ok1" ]
 	echo "$sys chroot dash dash"
-	RET=$(./raptz chroot -n sid -p $sys -m root -- echo ok2)
+	RET=$(./raptz chroot -n sid -p $sys -m $mode -- echo ok2)
 	[ "$RET" = "ok2" ]
 	echo "$sys chroot return"
-	./raptz chroot -n sid -p $sys -m root -- bash -c "exit 42" || RET=$?
+	./raptz chroot -n sid -p $sys -m $mode -- bash -c "exit 42" || RET=$?
 	[ "$RET" = 42 ]
 }
 
@@ -40,4 +43,4 @@ if [ "$RET" != "0" ] ; then
 	echo "failed"
 	false
 fi
-rm -rf testroot
+rm -rf tst$mode

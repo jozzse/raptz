@@ -3,14 +3,25 @@
 import sys
 import os
 import select
-from subprocess import Popen, check_output
+from subprocess import Popen, check_output, call
 from ConfigParser import SafeConfigParser, NoOptionError
 from argparse import ArgumentParser
 
-
 class Config:
+	arg_command = "help"
+	arg_pass = None
 	def __init__(self):
 		config = self
+		self.arg_exec = sys.argv[0]
+		if len(sys.argv) >= 1:
+			self.arg_command = sys.argv[1]
+		try:
+			i = sys.argv.index("--")
+			self.arg_pass = sys.argv[i+1:]
+			self.arg_opts = sys.argv[2:i]
+		except ValueError:
+			self.arg_opts = sys.argv[2:]
+
 		self._argp = ArgumentParser(prog="raptz")
 		self._argp.add_argument('-p', '--path', default="sysroot",
 			help="Path to sysroot"
@@ -36,9 +47,20 @@ class Config:
 		return self._argp
 
 	def setup(self):
-		args = self._argp.parse_args()
+		args = self._argp.parse_args(self.arg_opts)
 		self.args = args
 		self._sysroot = os.path.abspath(args.path)
+		if self.args.mode == "fake" and not os.getenv("FAKECHROOT"):
+			cmd = ["fakechroot", "-c", "fcr", "fakeroot" ] + sys.argv
+			env = os.environ
+			env["PATH"]+=":/usr/sbin"
+			env["PATH"]+=":/sbin"
+			if self.args.debug:
+				env["FAKECHROOT_DEBUG"] = "1"
+			print " ".join(cmd)
+			ret = call(cmd, env=env)
+			print ret
+			exit(ret)
 		self._confpath = os.path.abspath(args.name)
 		self._config = SafeConfigParser()
 		self._config.read(os.path.join(self._confpath, "raptz.cfg"))

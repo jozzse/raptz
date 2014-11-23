@@ -44,21 +44,37 @@ def ld_copy(root):
 			return True
 	except:
 		pass
-	print "Change"
-	cmd=["ln", "-sf", lddst, ldln]
-	if os.getuid() != 0:
-		print "SUDO"
-		cmd = ["sudo"] + cmd
-	return call(cmd) == 0
+#	print "Change"
+#	cmd=["ln", "-sf", lddst, ldln]
+#	if os.getuid() != 0:
+#		print "SUDO"
+#		cmd = ["sudo"] + cmd
+#	return call(cmd) == 0
+	return True
 	
 
 if not ld_copy(root):
 	print "Could not set ld-linux.so.3"
 
 ldloader = os.path.join(root, "lib/arm-linux-gnueabi/ld-2.19.so")
-env["LD_LIBRARY_PATH"] = ":".join(library_path)
+env["LD_LIBRARY_PATH"] += ":".join(library_path)
 
+def addp(newp, src, dst="/bin/true"):
+	newp.append("/bin/"+src+"="+dst)
+	newp.append("/sbin/"+src+"="+dst)
+	newp.append("/usr/bin/"+src+"="+dst)
+	newp.append("/usr/sbin/"+src+"="+dst)
+	return newp
 newp=[]
+newp = addp(newp, "mount")
+#newp = addp(newp, "insserv")
+#newp = addp(newp, "env", "/usr/bin/env.fakechroot")
+newp = addp(newp, "ischroot")
+newp = addp(newp, "ldd", "/usr/bin/ldd.fakechroot")
+newp = addp(newp, "mkfifo")
+newp = addp(newp, "ldconfig")
+newp = addp(newp, "ldconfig.real")
+
 for part in env["FAKECHROOT_CMD_SUBST"].split(":"):
 	pr, rep = part.split("=", 1)
 	if not pr.endswith("chroot"):
@@ -66,14 +82,22 @@ for part in env["FAKECHROOT_CMD_SUBST"].split(":"):
 
 env["FAKECHROOT_CMD_SUBST"] = ":".join(newp)
 
+del env["FAKECHROOT_CMD_ORIG"]
+#env["FAKECHROOT_BASE"] = env["FAKECHROOT_BASE_ORIG"]
+#del env["FAKECHROOT_BASE_ORIG"]
+
 env["LC_ALL"] = "C"
 env["LANGUAGE"] = "C"
 env["LANG"] = "C"
 
-cmd=["chroot", root] + sys.argv[2:]
-print "$: " + " ".join(cmd)
-ret = call(cmd, env=env)
-print ret
+senv=[]
+for k, v in env.items():
+	senv.append(k+"="+v)
+senv.append("FAKECHROOT_BASE="+root)
+
+cmd=["/usr/sbin/chroot", root]
+cmd+=["env", "-"] + senv + sys.argv[2:]
+ret = call(cmd)
 exit(ret)
 
 
