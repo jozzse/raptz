@@ -2,8 +2,8 @@ import os
 from config import config
 
 class Bootstrap:
-	def __init__(self, host):
-		self._host = host
+	def __init__(self):
+		pass
 
 	def bootstrap(self):
 		# The stage where nothing is mounted

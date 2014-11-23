@@ -12,15 +12,18 @@ from raptzerror import RaptzException
 from config import config
 
 class Host():
+	_stdoutfd = sys.stdout.fileno()
+	_stderrfd = sys.stderr.fileno()
+	_outcb = {}
+	_errcb = {}
+	_outline = ""
+	_errline = ""
+	poller = CbPoller()
 	def __init__(self):
-		self._stdoutfd = sys.stdout.fileno()
-		self._stderrfd = sys.stderr.fileno()
+		pass
+
+	def setup(self):
 		self._log = open(config.args.logfile, "w")
-		self._outcb = {}
-		self._errcb = {}
-		self._outline = ""
-		self._errline = ""
-		self.poller = CbPoller()
 		if config.args.ui == "term":
 			self._ui = UiTerm()
 			self.redirout()
@@ -121,4 +124,6 @@ class Host():
 
 
 
+global host
+host = Host()
 

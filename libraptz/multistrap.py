@@ -7,11 +7,12 @@ import tempfile
 import shutil
 from ConfigParser import SafeConfigParser
 from config import config
-
+from host import host
+from time import time
 
 class Multistrap(Bootstrap):
-	def __init__(self, host):
-		Bootstrap.__init__(self, host)
+	def __init__(self):
+		Bootstrap.__init__(self)
 		self._msfile = tempfile.NamedTemporaryFile()
 		self._msfile.delete = False
 		self._items=0
@@ -38,7 +39,7 @@ class Multistrap(Bootstrap):
 			par.set(repro, "components", " ".join(config.components(repro)))
 		par.write(self._msfile)
 		self._msfile.close()
-		r = self._host.runner
+		r = host.runner
 		cmds = ["multistrap", "-f", self._msfile.name]
 		if r.run(cmds, stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:
 			raise RaptzException("Multistrap main stage failed")
@@ -54,17 +55,17 @@ class Multistrap(Bootstrap):
 			self._done+=0.5
 		elif line.startswith("I:"):
 			self._done+=0.5
-		self._host.progress(float(self._done)/self._items)
+		host.progress(float(self._done)/self._items)
 		return True
 	def _stderr(self, line):
-		self._host.warn(line)
+		host.warn(line)
 		return True
 
 	def secondstage(self):
-		self._host.fs.mount_system()
+		host.fs.mount_system()
 		self._done = 0.0
-		r = self._host.runner
-		p = self._host.poller
+		r = host.runner
+		p = host.poller
 		env={
 			"DEBIAN_FRONTEND" : "noninteractive",
 			"DEBCONF_NONINTERACTIVE_SEEN" : "true",
@@ -87,7 +88,7 @@ class Multistrap(Bootstrap):
 		st = [ x.strip() for x in  f.readline().split(":") ]
 		if st[0] == "status" and st[-1] == "installed":
 			self._done += 1.0
-			self._host.progress(float(self._done)/self._items)
+			host.progress(float(self._done)/self._items)
 		return True
 	
 	def finalize(self):

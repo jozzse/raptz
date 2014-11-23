@@ -3,13 +3,12 @@
 import sys
 import os
 import select
+from host import host
 from subprocess import Popen, check_output
 
 class Apt():
-	def __init__(self, host):
-		self._progto = [0.0, 0.0]
-		self._prog = [0.0, 0.0]
-		self._host = host
+	_progto = [0.0, 0.0]
+	_prog = [0.0, 0.0]
 
 	def _prog_reset(self, pm=False):
 		self._prog = [0.0, 0.0]
@@ -62,9 +61,9 @@ class Apt():
 			cmd += pkgs
 
 		stfile = os.fdopen(pout)
-		self._host.poller.add(stfile, self._apt_status)
-		ret = self._host.runner.chroot(cmd)
-		self._host.poller.remove(stfile)
+		host.poller.add(stfile, self._apt_status)
+		ret = host.runner.chroot(cmd)
+		host.poller.remove(stfile)
 		return ret
 
 	def _apt_status(self, f, ev):
@@ -76,6 +75,6 @@ class Apt():
 			prog = self._prog_set(st[0], float(st[2]))
 		else:
 			return True
-		self._host.progress(prog, st[3])
+		host.progress(prog, st[3])
 		return True
 

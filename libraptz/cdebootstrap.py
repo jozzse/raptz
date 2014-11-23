@@ -3,11 +3,11 @@
 from raptzerror import RaptzException
 from bootstrap import Bootstrap
 from config import config
+from host import host
 
 class CDebootstrap(Bootstrap):
 	_flavour="minimal"
-	def __init__(self, host):
-		self._host = host
+	def __init__(self):
 		self._tot_packs = 1
 		self._done_packs = 0
 
@@ -21,14 +21,14 @@ class CDebootstrap(Bootstrap):
 		elif l == "I: Base system installed successfully.":
 			self._done_packs = self._tot_packs
 		prog = self._done_packs/float(self._tot_packs)
-		self._host.progress(prog, l)
+		host.progress(prog, l)
 		return True
 
 	def _stderr(self, line):
 		if line.startswith("I"):
-			self._host.text(line)
+			host.text(line)
 		else:
-			self._host.dbg(line)
+			host.dbg(line)
 		return True
 
 	def bootstrap(self):
@@ -49,13 +49,13 @@ class CDebootstrap(Bootstrap):
 		cmds.append(config.sysroot())
 		cmds.append(config.source())
 #		cmds.append("/usr/share/debootstrap/scripts/testing")
-		r = self._host.runner
+		r = host.runner
 
 		if r.run(cmds, stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:
 			raise RaptzException("Debootstrap main stage failed")
 
 	def secondstage(self):
-		r = self._host.runner
+		r = host.runner
 		if r.chroot(["/sbin/cdebootstrap-foreign"],
 			stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:
 			raise RaptzException("Debootstap second stage failed")

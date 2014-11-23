@@ -5,17 +5,15 @@ import tempfile
 import shutil
 from raptzerror import RaptzException
 from config import config
+from host import host
 
 class Configure:
-	def __init__(self, host):
-		self._host = host
-
 	def clean(self):
 		if os.path.isdir(config.sysroot()):
 			shutil.rmtree(config.sysroot())
 
 	def debconf(self):
-		c = self._host.runner
+		c = host.runner
 		debconfsrc=config.confpath("debconf.cfg")
 		if os.path.isfile(config.confpath("debconf.cfg")):
 			debconfdst=config.sysroot("/tmp/debconf.cfg")
@@ -37,13 +35,13 @@ class Configure:
 			for f in files:
 				srcf = os.path.join(srcroot, f)
 				dstf = os.path.join(dstroot, f)
-				self._host.text(" ".join(["cp ", srcf, dstf]))
+				host.text(" ".join(["cp ", srcf, dstf]))
 				shutil.copy2(srcf, dstf)
 
 	def configure(self):
 		cfgroot = config.confpath("conf")
 		srcroot, dirs, files = os.walk(cfgroot).next()
-		ch = self._host.runner
+		ch = host.runner
 		i = 0
 		for d in dirs:
 			src = os.path.join(srcroot, d)
@@ -70,6 +68,6 @@ class Configure:
 			i+=1
 
 	def _stdout(self, line):
-		self._host.text(line)
+		host.text(line)
 		return True
 

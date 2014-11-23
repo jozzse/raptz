@@ -3,11 +3,12 @@
 from raptzerror import RaptzException
 from bootstrap import Bootstrap
 from config import config
+from host import host
 
 class Debootstrap(Bootstrap):
 	_variant="minbase"
-	def __init__(self, host):
-		self._host = host
+	def __init__(self):
+		Bootstrap.__init__(self)
 		self._tot_packs = 1
 		self._done_packs = 0
 
@@ -21,14 +22,14 @@ class Debootstrap(Bootstrap):
 		elif l == "I: Base system installed successfully.":
 			self._done_packs = self._tot_packs
 		prog = self._done_packs/float(self._tot_packs)
-		self._host.progress(prog, l)
+		host.progress(prog, l)
 		return True
 
 	def _stderr(self, line):
 		if line.startswith("I"):
-			self._host.text(line)
+			host.text(line)
 		else:
-			self._host.dbg(line)
+			host.dbg(line)
 		return True
 
 	def bootstrap(self):
@@ -49,7 +50,7 @@ class Debootstrap(Bootstrap):
 		cmds.append(config.sysroot())
 		cmds.append(config.source())
 		cmds.append("/usr/share/debootstrap/scripts/testing")
-		r = self._host.runner
+		r = host.runner
 
 		first = [cmds[0], "--print-debs", "--keep-debootstrap-dir" ]	+ cmds[1:]
 		if r.run(first, stdoutfunc=self._setpaks, stderrfunc=self._stderr) != 0:
@@ -58,7 +59,7 @@ class Debootstrap(Bootstrap):
 			raise RaptzException("Debootstrap main stage failed")
 
 	def secondstage(self):
-		r = self._host.runner
+		r = host.runner
 		if r.chroot(["debootstrap/debootstrap", "--second-stage", "--variant=" + self._variant],
 			stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:
 			raise RaptzException("Debootstap second stage failed")

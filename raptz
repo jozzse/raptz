@@ -3,7 +3,7 @@
 import sys
 import os
 
-from libraptz.host import Host
+from libraptz.host import host
 from libraptz.config import config
 from libraptz.configure import Configure
 from libraptz.cdebootstrap import CDebootstrap
@@ -17,18 +17,15 @@ import libraptz.comp as comp
 # Should be moved to ui?
 class Script:
 	_script = []
-	def __init__(self, host):
-		self._host = host
-
 	def add(self, cmd, *kargs):
 		self._script.append((cmd, kargs))
 
 	def run(self):
-		self._host.set_parts(len(self._script))
+		host.set_parts(len(self._script))
 		for cmd, kargs in self._script:
-			self._host.start(cmd.__name__)
+			host.start(cmd.__name__)
 			cmd(*kargs)
-			self._host.done()
+			host.done()
 		return True
 
 class Raptz:
@@ -48,7 +45,7 @@ Raptz sysroot handler
 			cmds=["bash"]
 		config.setup()
 		config.args.ui = "log"
-		host = Host()
+		host.setup()
 		host.fs.mount_system()
 		ret = host.runner.chroot(cmds)
 		host.fs.umount_system()
@@ -56,32 +53,34 @@ Raptz sysroot handler
 
 	def tar(self):
 		""" Create one or multiple compressed tar files """
-		self._comp(comp.Tar)
+		return self._comp(comp.Tar)
 
 	def cpio(self):
 		""" Create one or multiple compressed cpio files """
-		self._comp(comp.Cpio)
+		return self._comp(comp.Cpio)
 
 	def _comp(self, basetype):
-		argp.add_argument("-t", "--tar", default=None,
-			help="Create a uncompressed tar file")
+		argp = config.get_argparser()
+		argp.add_argument("-r", "--raw", default=None,
+			help="Create a uncompressed raw file")
 		argp.add_argument("-g", "--gzip", default=None,
-			help="Create a gzip compressed tar file")
+			help="Create a gzip compressed file")
 		argp.add_argument("-b", "--bzip2", default=None,
-			help="Create a bzip2 compressed tar file")
+			help="Create a bzip2 compressed file")
 		argp.add_argument("-x", "--xz", default=None,
-			help="Create a xz compressed tar file")
+			help="Create a xz compressed file")
 		config.setup()
-		tar = basetype(config.sysroot())
-		if config.args.tar and config.args.tar != "":
-			tar.add(comp.Cat(config.args.tar))
+		sys = basetype(config.sysroot())
+		if config.args.raw and config.args.raw != "":
+			sys.add(comp.Cat(config.args.raw))
 		if config.args.gzip and config.args.gzip != "":
-			tar.add(comp.GZip(config.args.gzip))
+			sys.add(comp.GZip(config.args.gzip))
 		if config.args.bzip2 and config.args.bzip2 != "":
-			tar.add(comp.BZip2(config.args.bzip2))
+			sys.add(comp.BZip2(config.args.bzip2))
 		if config.args.xz and config.args.xz != "":
-			tar.add(comp.XZ(config.args.xz))
-		tar.compress()
+			sys.add(comp.XZ(config.args.xz))
+		sys.compress()
+		return 0
 
 
 	def mksys(self):
@@ -97,18 +96,18 @@ Raptz sysroot handler
 			help="bootstrap mode (multstrap*, debootstrap, cdebootstrap)"
 		)
 		config.setup()
-		host = Host()
-		sc = Script(host)
+		host.setup()
+		sc = Script()
 		if config.args.bootstrap == "multistrap":
-			bsp = Multistrap(host)
+			bsp = Multistrap()
 		elif config.args.bootstrap == "debootstrap":
-			bsp = Debootstrap(host)
+			bsp = Debootstrap()
 		elif config.args.bootstrap == "cdebootstrap":
-			bsp = CDebootstrap(host)
+			bsp = CDebootstrap()
 		else:
 			raise "Unknown mode " + config.args.bootstrap
-		apt = Apt(host)
-		cfg = Configure(host)
+		apt = Apt()
+		cfg = Configure()
 		if config.args.clean:
 			sc.add(cfg.clean)
 		sc.add(bsp.bootstrap)
@@ -125,7 +124,7 @@ Raptz sysroot handler
 		sc.add(cfg.configure)
 		sc.add(host.fs.umount_system)
 		sc.run()
-		return True
+		return 0
 
 	def help(self):
 		""" Print this help"""
@@ -148,8 +147,7 @@ ret = 0
 raptz = Raptz()
 func = getattr(raptz, command)
 try:
-	if not func():
-		ret = 1
+	ret = func()
 except RaptzException as e:
 	if raptz.debug:
 		raise

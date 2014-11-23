@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+
+_test()
+{
+	sys=sysroot/$1
+	mkdir -p sysroot
+	echo "$sys mksys"
+	./raptz mksys -n sid -p $sys -b $1 -m root -u log >$sys.log 2>&1
+	echo "$sys cpio"
+	./raptz cpio -n sid -p $sys -r a.cpio -g a.cpio.gz -b a.cpio.bz2 -x a.cpio.xz
+	echo "$sys tar"
+	./raptz tar -n sid -p $sys -r a.tar -g a.tar.gz -b a.tar.bz2 -x a.tar.xz
+	echo "$sys chroot pipe"
+	RET=$(echo "echo ok1" | ./raptz chroot -n sid -p $sys -m root)
+	[ "$RET" = "ok1" ]
+	echo "$sys chroot dash dash"
+	RET=$(./raptz chroot -n sid -p $sys -m root -- echo ok2)
+	[ "$RET" = "ok2" ]
+	echo "$sys chroot return"
+	./raptz chroot -n sid -p $sys -m root -- bash -c "exit 42" || RET=$?
+	[ "$RET" = 42 ]
+}
+
+_test cdebootstrap &
+_test debootstrap &
+_test multistrap &
+
+while [ -n "$(jobs)" ] ; do
+	jobs
+	echo
+	wait -n || RET=1
+	if [ "$RET" != "0" ] ; then
+		RET=$(( RET++ ))
+	fi
+done
+if [ "$RET" != "0" ] ; then
+	echo "failed"
+fi
