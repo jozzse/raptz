@@ -49,6 +49,16 @@ Raptz sysroot handler
 		host.fs.umount_system()
 		return ret
 
+	def copy(self):
+		""" Copy root filesystem to new place (device for example)"""
+		argp = config.get_argparser()
+		argp.add_argument("-d", "--destination", default=None,
+			help="Destination folder to copy system too")
+		config.setup()
+		sys = comp.Tar(config.sysroot())
+		sys.add(comp.UnTar(config.args.destination))
+		sys.compress()
+
 	def tar(self):
 		""" Create one or multiple compressed tar files """
 		return self._comp(comp.Tar)

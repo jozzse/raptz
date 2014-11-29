@@ -84,6 +84,21 @@ class Tar(InFile):
 		cmd=["tar", "-c", "-f", "-", "-C",  sysroot, "."] # tar to output
 		return self.write(cmd)
 
+class UnTar:
+	def __init__(self, path):
+		self._path = path
+
+	def open(self):
+		if not os.path.isdir(self._path):
+			os.mkdir(self._path)
+		cmd = ["tar", "-C", self._path, "-x", "-f", "-"]
+		self._p = Popen(cmd, stdin=PIPE)
+		return self._p.stdin
+
+	def close(self):
+		self._p.wait()
+
+
 class OutputFile:
 	def __init__(self, filename):
 		self._filename = filename
@@ -109,6 +124,7 @@ class OutputPipe(OutputFile):
 
 class Cat(OutputPipe):
 	_prog=["cat"]
+
 
 class GZip(OutputPipe):
 	_prog=["pigz", "-c"]

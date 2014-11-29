@@ -51,7 +51,13 @@ class Config:
 		self.args = args
 		self._sysroot = os.path.abspath(args.path)
 		if self.args.mode == "fake" and not os.getenv("FAKECHROOT"):
-			cmd = ["fakechroot", "-c", "fcr", "fakeroot" ] + sys.argv
+			fakeenv = self.sysroot("fake.env")
+			cmd = ["fakechroot", "-c", "fcr" ]
+			cmd+= ["fakeroot",
+				"-s", self.sysroot(fakeenv)]
+			if os.path.exists(fakeenv):
+				cmd+=["-i", self.sysroot(fakeenv)]
+			cmd+= sys.argv
 			env = os.environ
 			env["PATH"]+=":/usr/sbin"
 			env["PATH"]+=":/sbin"
