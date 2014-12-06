@@ -34,7 +34,6 @@ Raptz sysroot handler
 
   raptz command [options]
 	"""
-	debug=True
 	def chroot(self):
 		""" Chroot into a sysroot """
 		config.setup()
@@ -42,7 +41,7 @@ Raptz sysroot handler
 			cmds = config.arg_pass
 		else:
 			cmds=["bash"]
-		config.args.ui = "log"
+		config.ui = "log"
 		host.setup()
 		host.fs.mount_system()
 		ret = host.runner.chroot(cmds)
@@ -77,16 +76,16 @@ Raptz sysroot handler
 			help="Create a bzip2 compressed file")
 		argp.add_argument("-x", "--xz", default=None,
 			help="Create a xz compressed file")
-		config.setup()
+		args = config.setup()
 		sys = basetype(config.sysroot())
-		if config.args.raw and config.args.raw != "":
-			sys.add(comp.Cat(config.args.raw))
-		if config.args.gzip and config.args.gzip != "":
-			sys.add(comp.GZip(config.args.gzip))
-		if config.args.bzip2 and config.args.bzip2 != "":
-			sys.add(comp.BZip2(config.args.bzip2))
-		if config.args.xz and config.args.xz != "":
-			sys.add(comp.XZ(config.args.xz))
+		if args.raw and args.raw != "":
+			sys.add(comp.Cat(args.raw))
+		if args.gzip and args.gzip != "":
+			sys.add(comp.GZip(args.gzip))
+		if args.bzip2 and args.bzip2 != "":
+			sys.add(comp.BZip2(args.bzip2))
+		if args.xz and args.xz != "":
+			sys.add(comp.XZ(args.xz))
 		sys.compress()
 		return 0
 
@@ -94,8 +93,9 @@ Raptz sysroot handler
 	def mksys(self):
 		""" Create a sysroot """
 		argp = config.get_argparser()
-		argp.add_argument("-c", "--clean", help="Clean the sysroot before building",
-			 default=False, action='store_true')
+		argp.add_argument("-k", "--keep", 
+			help="Do not clear the sysroot directory prior to sysroot generation",
+			default=False, action='store_true')
 		argp.add_argument("-D", "--dev", help="Run development parts of configuration",
 			 default=False, action='store_true')
 		argp.add_argument("-S", "--suite", help="Set different suite to install",
@@ -103,34 +103,33 @@ Raptz sysroot handler
 		argp.add_argument("-b", "--bootstrap", default="multistrap",
 			help="bootstrap mode (multstrap*, debootstrap, cdebootstrap)"
 		)
-		config.setup()
+		args = config.setup()
 		host.setup()
 		sc = Script()
-		if config.args.bootstrap == "multistrap":
+		if args.bootstrap == "multistrap":
 			bsp = Multistrap()
-		elif config.args.bootstrap == "debootstrap":
+		elif args.bootstrap == "debootstrap":
 			bsp = Debootstrap()
-		elif config.args.bootstrap == "cdebootstrap":
+		elif args.bootstrap == "cdebootstrap":
 			bsp = CDebootstrap()
 		else:
-			raise "Unknown mode " + config.args.bootstrap
+			raise "Unknown mode " + args.bootstrap
 		apt = Apt()
 		cfg = Configure()
-		if config.args.clean:
-			sc.add(cfg.clean)
+		if not args.keep:
+			cfg.clean()
 		sc.add(bsp.bootstrap)
-		sc.add(cfg.debconf)
+		sc.add(cfg.setup)
 		sc.add(bsp.secondstage)
-		sc.add(cfg.copyroot)
 		sc.add(bsp.finalize)
-		sc.add(host.fs.mount_system)
-		sc.add(apt.update)
-		sc.add(apt.install, config.keyrings())
-		sc.add(apt.update)
-		sc.add(apt.install, config.packages())
+		if not bsp.fullinstall():
+			sc.add(apt.update)
+			sc.add(apt.install, config.keyrings())
+			sc.add(apt.update)
+			sc.add(apt.install, config.packages())
 		sc.add(cfg.configure)
-		sc.add(host.fs.umount_system)
 		sc.run()
+		host.fs.umount_system()
 		return 0
 
 	def help(self):
@@ -148,8 +147,9 @@ raptz = Raptz()
 func = getattr(raptz, config.arg_command)
 try:
 	ret = func()
+	config.save()
 except RaptzException as e:
-	if raptz.debug:
+	if config.debug:
 		raise
 	else:
 		print

@@ -12,18 +12,15 @@ class Configure:
 		if os.path.isdir(config.sysroot()):
 			shutil.rmtree(config.sysroot())
 
-	def debconf(self):
-		c = host.runner
+	def setup(self):
+		self.copy2sysroot(config.confpath("root"))
 		debconfsrc=config.confpath("debconf.cfg")
 		if os.path.isfile(config.confpath("debconf.cfg")):
 			debconfdst=config.sysroot("/tmp/debconf.cfg")
 			shutil.copy2(debconfsrc, debconfdst)
-			if c.chroot(["debconf-set-selections", "-v", "/tmp/debconf.cfg"]):
+			if host.runner.chroot(["debconf-set-selections", "-v", "/tmp/debconf.cfg"]):
 				raise RaptzException("Debconf failed")
 			os.unlink(debconfdst)
-
-	def copyroot(self):
-		self.copy2sysroot(config.confpath("root"))
 
 	def copy2sysroot(self, src, dst="/"):
 		for srcroot, dirs, files in os.walk(src):
@@ -54,13 +51,13 @@ class Configure:
 				stdoutfunc=self._stdout,
 				stderrfunc=self._stdout)
 
-			# Run dev scripts if avalible
-			dstinit = config.rmsysroot(os.path.join(dst, "init.dev.sh"))
-			if config.args.dev and os.path.isdir(config.sysroot(dstinit)):
-				dstarg = config.rmsysroot(dst)
-				ret = ch.chroot([dstinit, dstarg],
-					stdoutfunc=self._stdout,
-					stderrfunc=self._stdout)
+			# Run dev scripts if avalible, disabel as of now
+			#dstinit = config.rmsysroot(os.path.join(dst, "init.dev.sh"))
+			#if config.args.dev and os.path.isdir(config.sysroot(dstinit)):
+			#	dstarg = config.rmsysroot(dst)
+			#	ret = ch.chroot([dstinit, dstarg],
+			#		stdoutfunc=self._stdout,
+			#		stderrfunc=self._stdout)
 
 			shutil.rmtree(dst)
 			if ret != 0:

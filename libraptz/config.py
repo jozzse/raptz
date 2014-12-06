@@ -10,47 +10,67 @@ from argparse import ArgumentParser
 class Config:
 	arg_command = "help"
 	arg_pass = None
+	name = ""
+	mode = "fake"
+	logfile = "raptz.log"
+	ui = "term"
 	def __init__(self):
 		config = self
 		self.arg_exec = sys.argv[0]
-		if len(sys.argv) >= 1:
+		if len(sys.argv) > 2:
 			self.arg_command = sys.argv[1]
-		try:
+			self.arg_sysroot = sys.argv[2]
+			self._sysroot = os.path.abspath(sys.argv[2])
+		elif len(sys.argv) == 2:
+			self.arg_command = sys.argv[1]
+			self.arg_opts = ["--help"]
+		else:
+			self.arg_command = "help"
+
+		if "--" in sys.argv:
 			i = sys.argv.index("--")
 			self.arg_pass = sys.argv[i+1:]
-			self.arg_opts = sys.argv[2:i]
-		except ValueError:
-			self.arg_opts = sys.argv[2:]
+			self.arg_opts = sys.argv[3:i]
+		else:
+			self.arg_opts = sys.argv[3:]
 
 		self._argp = ArgumentParser(prog="raptz")
-		self._argp.add_argument('-p', '--path', default="sysroot",
-			help="Path to sysroot"
-		)
-		self._argp.add_argument("--debug", default=False,
-			action='store_true',
-			help="Enable debug mode"
-		)
-		self._argp.add_argument('-n', '--name', default="default",
-			help="Configuration name"
-		)
-		self._argp.add_argument('-l', '--logfile', default="raptz.log",
-			help="Set logfile (default raptz.log)"
-		)
-		self._argp.add_argument('-u', '--ui', default="term",
-			help="Ui selection (log, term)"
-		)
-		self._argp.add_argument('-m', '--mode', default="fake",
-			help="Mode (fake or root)"
-		)
 
 	def get_argparser(self):
 		return self._argp
 
 	def setup(self):
+		setup = SafeConfigParser()
+		self._setupfile = self.sysroot("/var/lib/raptz.setup")
+		if os.path.isfile(self._setupfile):
+			setup.read(self._setupfile)
+		else:
+			setup.add_section("raptz")
+			setup.set("raptz", "name", self.name)
+			setup.set("raptz", "mode", self.mode)
+		self._argp.add_argument('-n', '--name',
+			default=setup.get("raptz", "name"),
+			help="Name or path of configuration. *"
+		)
+		self._argp.add_argument('-m', '--mode',
+			default=setup.get("raptz", "mode"),
+			help="Mode (fake or root) *"
+		)
+
+		self._argp.add_argument("--debug", default=False,
+			action='store_true',
+			help="Enable debug mode"
+		)
+		self._argp.add_argument('-l', '--logfile',
+			default=self.logfile,
+			help="Set logfile (default raptz.log)"
+		)
+		self._argp.add_argument('-u', '--ui', default=self.ui,
+			help="Ui selection (log, term)"
+		)
+
 		args = self._argp.parse_args(self.arg_opts)
-		self.args = args
-		self._sysroot = os.path.abspath(args.path)
-		if self.args.mode == "fake" and not os.getenv("FAKECHROOT"):
+		if args.mode == "fake" and not os.getenv("FAKECHROOT"):
 			fakeenv = self.sysroot("fake.env")
 			cmd = ["fakechroot", "-c", "fcr" ]
 			cmd+= ["fakeroot",
@@ -67,10 +87,24 @@ class Config:
 			ret = call(cmd, env=env)
 			print ret
 			exit(ret)
+
+		self.mode = args.mode
+		self.name = args.name
+		self.logfile = args.logfile
+		self.ui = args.ui
+		self.debug = args.debug
 		self._confpath = os.path.abspath(args.name)
 		self._config = SafeConfigParser()
 		self._config.read(os.path.join(self._confpath, "raptz.cfg"))
-		self.debug = args.debug
+		return args
+
+	def save(self):
+		setup = SafeConfigParser()
+		setup.add_section("raptz")
+		setup.set("raptz", "mode", self.mode)
+		setup.set("raptz", "name", self.name)
+		with open(self._setupfile, "wb") as setupfile:
+			setup.write(setupfile)
 
 	def repros(self):
 		return self._config.get("General", "bootstrap").split()
@@ -83,8 +117,6 @@ class Config:
 	def suite(self, repro=None):
 		if repro != None:
 			return self._config.get(repro, "suite")
-		if self.args.suite:
-			return self.args.suite
 		bootstraps=self._config.get("General", "bootstrap").split()
 		return self._config.get(bootstraps[0], "suite")
 
@@ -113,7 +145,7 @@ class Config:
 			ret += self._config.get(c, "packages").split()
 		return ret
 	def early_packages(self):
-		if self.args.mode == "fake":
+		if self.mode == "fake":
 			return self._config.get("General", "fakepackages").split()
 		return []
 

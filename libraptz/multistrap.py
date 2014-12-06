@@ -17,6 +17,10 @@ class Multistrap(Bootstrap):
 		self._msfile.delete = False
 		self._items=0
 		self._done=0
+	
+	def fullinstall(self):
+		return True
+	
 	def bootstrap(self):
 		# Lets build the multistrap configuration file
 		par = SafeConfigParser()
@@ -33,7 +37,7 @@ class Multistrap(Bootstrap):
 		for repro in config.repros():
 			par.add_section(repro)
 			par.set(repro, "keyring", keyrings[repro])
-			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages()))
+			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages()) + " ".join(config.packages()))
 			par.set(repro, "source", config.source(repro))
 			par.set(repro, "suite", config.suite(repro))
 			par.set(repro, "components", " ".join(config.components(repro)))

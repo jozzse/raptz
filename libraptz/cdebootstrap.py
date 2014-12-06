@@ -55,6 +55,7 @@ class CDebootstrap(Bootstrap):
 			raise RaptzException("Debootstrap main stage failed")
 
 	def secondstage(self):
+		host.fs.mount_system()
 		r = host.runner
 		if r.chroot(["/sbin/cdebootstrap-foreign"],
 			stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:

@@ -5,7 +5,7 @@ import os
 import select
 from cbpoller import CbPoller
 from chroot import FakeRoot, ChRoot
-from ui import UiLog, UiTerm
+from ui import UiLog, UiTerm, UiGtk
 from fs import FakeFs, RootFs
 from raptzerror import RaptzException
 
@@ -23,18 +23,20 @@ class Host():
 		pass
 
 	def setup(self):
-		self._log = open(config.args.logfile, "w")
-		if config.args.ui == "term":
+		self._log = open(config.logfile, "w")
+		if config.ui == "gtk":
+			self._ui = UiGtk()
+		if config.ui == "term":
 			self._ui = UiTerm()
 			self.redirout()
 		else:
 			self._ui = UiLog()
-		
+
 		#self.runner = FakeRoot(self)
 		self.runner = ChRoot(self)
-		if config.args.mode == "fake":
+		if config.mode == "fake":
 			self.fs = FakeFs(self)
-		elif config.args.mode == "root":
+		elif config.mode == "root":
 			if os.getuid() != 0:
 				raise RaptzException("You shall be root to run in root mode")
 			self.fs = RootFs(self)

@@ -59,6 +59,7 @@ class Debootstrap(Bootstrap):
 			raise RaptzException("Debootstrap main stage failed")
 
 	def secondstage(self):
+		host.fs.mount_system()
 		r = host.runner
 		if r.chroot(["debootstrap/debootstrap", "--second-stage", "--variant=" + self._variant],
 			stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:

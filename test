@@ -11,19 +11,19 @@ _test()
 {
 	sys=tst$mode/$1
 	echo "$sys mksys"
-	./raptz mksys -n sid -p $sys -b $1 -m $mode -u log >${sys}.mksys.log 2>&1
+	./raptz mksys $sys -n sid -b $1 -m $mode -u log >${sys}.mksys.log 2>&1
 	echo "$sys cpio"
-	./raptz cpio -n sid -p $sys -m $mode -x ${sys}.cpio.xz 
+	./raptz cpio $sys -x ${sys}.cpio.xz 
 	echo "$sys tar"
-	./raptz tar -n sid -p $sys -m $mode -r ${sys}.tar -g ${sys}.tar.gz -b${sys}.tar.bz2
+	./raptz tar $sys -r ${sys}.tar -g ${sys}.tar.gz -b${sys}.tar.bz2
 	echo "$sys chroot pipe"
-	RET=$(echo "echo ok1" | ./raptz chroot -n sid -p $sys -m $mode)
+	RET=$(echo "echo ok1" | ./raptz chroot $sys)
 	[ "$RET" = "ok1" ]
 	echo "$sys chroot dash dash"
-	RET=$(./raptz chroot -n sid -p $sys -m $mode -- echo ok2)
+	RET=$(./raptz chroot $sys -- echo ok2)
 	[ "$RET" = "ok2" ]
 	echo "$sys chroot return"
-	./raptz chroot -n sid -p $sys -m $mode -- bash -c "exit 42" || RET=$?
+	./raptz chroot $sys -- bash -c "exit 42" || RET=$?
 	[ "$RET" = 42 ]
 }
 
@@ -32,9 +32,8 @@ _test debootstrap &
 _test multistrap &
 
 while [ -n "$(jobs)" ] ; do
-	jobs
-	echo
 	wait -n || RET=1
+	jobs
 	if [ "$RET" != "0" ] ; then
 		RET=$(( RET++ ))
 	fi

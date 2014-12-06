@@ -5,6 +5,9 @@ class Bootstrap:
 	def __init__(self):
 		pass
 
+	def fullinstall(self):
+		return False
+
 	def bootstrap(self):
 		# The stage where nothing is mounted
 		pass
