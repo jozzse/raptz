@@ -53,9 +53,9 @@ Raptz sysroot handler
 		argp = config.get_argparser()
 		argp.add_argument("-d", "--destination", default=None,
 			help="Destination folder to copy system too")
-		config.setup()
+		args = config.setup()
 		sys = comp.Tar(config.sysroot())
-		sys.add(comp.UnTar(config.args.destination))
+		sys.add(comp.UnTar(args.destination))
 		sys.compress()
 
 	def tar(self):
