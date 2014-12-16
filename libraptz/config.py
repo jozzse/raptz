@@ -81,7 +81,7 @@ class Config:
 			env = os.environ
 			env["PATH"]+=":/usr/sbin"
 			env["PATH"]+=":/sbin"
-			if self.args.debug:
+			if args.debug:
 				env["FAKECHROOT_DEBUG"] = "1"
 			print " ".join(cmd)
 			ret = call(cmd, env=env)

@@ -10,7 +10,7 @@ def umount_all(base):
 	mps=[]
 	for line in f:
 		mp=line.split()[1]
-		if mp.startswith(base):
+		if mp.startswith(base) and mp != base:
 			mps.append(mp)
 	ok = True
 	for mp in mps:
