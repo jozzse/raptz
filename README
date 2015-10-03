@@ -2,6 +2,10 @@
  Rapid APT Zysroot (why not)
 -----------------------------
 
+Create a system root:
+
+./rapts mksys <sysroot-path>
+
 Directory structure
 -------------------
 
