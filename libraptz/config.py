@@ -11,7 +11,7 @@ class Config:
 	arg_command = "help"
 	arg_pass = None
 	name = ""
-	mode = "fake"
+	mode = "root"
 	logfile = "raptz.log"
 	ui = "term"
 	def __init__(self):

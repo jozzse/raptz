@@ -30,11 +30,11 @@ class Host():
 		else:
 			self._ui = UiLog()
 
-		#self.runner = FakeRoot(self)
-		self.runner = ChRoot(self)
 		if config.mode == "fake":
+			self.runner = FakeRoot(self)
 			self.fs = FakeFs(self)
-		elif config.mode == "root":
+		else:
+			self.runner = ChRoot(self)
 			if os.getuid() != 0:
 				raise RaptzException("You shall be root to run in root mode")
 			self.fs = RootFs(self)
