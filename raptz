@@ -12,6 +12,7 @@ from libraptz.multistrap import Multistrap
 from libraptz.apt import Apt
 from libraptz.raptzerror import RaptzException
 import libraptz.comp as comp
+import libraptz.progs as progs
 #from libraptz.mount import Mount
 
 # Should be moved to ui?
@@ -145,6 +146,7 @@ Raptz sysroot handler
 ret = 0
 raptz = Raptz()
 func = getattr(raptz, config.arg_command)
+progs.lock()
 try:
 	ret = func()
 	config.save()

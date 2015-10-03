@@ -4,6 +4,7 @@ from raptzerror import RaptzException
 from bootstrap import Bootstrap
 from config import config
 from host import host
+import progs
 
 class Debootstrap(Bootstrap):
 	_variant="minbase"
@@ -11,6 +12,7 @@ class Debootstrap(Bootstrap):
 		Bootstrap.__init__(self)
 		self._tot_packs = 1
 		self._done_packs = 0
+		progs.register("debootstrap")
 
 	def _setpaks(self, line):
 		self._tot_packs = len(line.split()) * 4
@@ -34,7 +36,7 @@ class Debootstrap(Bootstrap):
 
 	def bootstrap(self):
 		""" Will install using debootstrap """
-		cmds=["/usr/sbin/debootstrap", "--variant="+self._variant]
+		cmds=["debootstrap", "--variant="+self._variant]
 
 		if config.arch():
 			cmds.append("--foreign")

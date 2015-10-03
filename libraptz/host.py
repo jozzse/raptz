@@ -5,7 +5,7 @@ import os
 import select
 from cbpoller import CbPoller
 from chroot import FakeRoot, ChRoot
-from ui import UiLog, UiTerm, UiGtk
+from ui import UiLog, UiTerm
 from fs import FakeFs, RootFs
 from raptzerror import RaptzException
 
@@ -24,8 +24,6 @@ class Host():
 
 	def setup(self):
 		self._log = open(config.logfile, "w")
-		if config.ui == "gtk":
-			self._ui = UiGtk()
 		if config.ui == "term":
 			self._ui = UiTerm()
 			self.redirout()

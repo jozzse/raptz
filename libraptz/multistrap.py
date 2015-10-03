@@ -9,6 +9,7 @@ from ConfigParser import SafeConfigParser
 from config import config
 from host import host
 from time import time
+import progs
 
 class Multistrap(Bootstrap):
 	def __init__(self):
@@ -17,7 +18,8 @@ class Multistrap(Bootstrap):
 		self._msfile.delete = False
 		self._items=0
 		self._done=0
-	
+	        progs.register("multistrap");
+
 	def fullinstall(self):
 		return True
 	

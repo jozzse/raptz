@@ -3,6 +3,7 @@ import os
 from subprocess import call
 import time
 import atexit
+import progs
 from config import config
 
 def umount_all(base):
@@ -29,7 +30,7 @@ class Fs:
 	SYS=("/sys", "/proc", "/dev")
 	def __init__(self, host):
 		self._host = host
-	
+		
 	def mount_system(self):
 		for mp in self.SYS:
 			if self.bound(mp):
@@ -78,6 +79,8 @@ class FakeFs(Fs):
 
 class RootFs(Fs):
 	def __init__(self, host):
+		progs.register("mount");
+		progs.register("umount");
 		self._host = host
 		atexit.register(umount_all, config.sysroot())
 

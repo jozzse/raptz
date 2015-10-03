@@ -5,20 +5,26 @@ import os
 import select
 from subprocess import Popen, check_output, call
 from config import config
+import progs
 
 import shutil
+
+QEMU_BIN="qemu-arm-static"
+
 class ChRoot:
 	RCDFILE_CONTENT="""#!/bin/dash\nexit 101\n"""
-	_qemusrc = "/usr/bin/qemu-arm-static"
 	def __init__(self, host):
 		self._host = host
 		self._rcddst = config.sysroot("/usr/sbin/policy-rc.d")
-		self._qemudst = config.sysroot(self._qemusrc)
+		progs.register(QEMU_BIN)
+		progs.register("chroot")
+		self._qemudst = config.sysroot(progs.get(QEMU_BIN))
 
 	def run(self, cmds, env=None, stdoutfunc=None, stderrfunc=None, *kargs):
 		stdout = self._host.stdoutfd()
 		stderr = self._host.stderrfd()
 		renv = os.environ
+		cmds[0] = progs.get(cmds[0])
 		if env:
 			for key, value in env.items():
 				renv[key] = value
@@ -40,7 +46,7 @@ class ChRoot:
 		return call(cmds, env=renv)
 
 	def _ch_setup(self):
-		shutil.copy(self._qemusrc, self._qemudst)
+		shutil.copy(progs.get(QEMU_BIN), self._qemudst)
 		open(self._rcddst, "w").write(self.RCDFILE_CONTENT)
 		os.chmod(self._rcddst, 0755)
 

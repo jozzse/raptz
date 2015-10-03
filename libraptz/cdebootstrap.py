@@ -4,12 +4,14 @@ from raptzerror import RaptzException
 from bootstrap import Bootstrap
 from config import config
 from host import host
+import progs
 
 class CDebootstrap(Bootstrap):
 	_flavour="minimal"
 	def __init__(self):
 		self._tot_packs = 1
 		self._done_packs = 0
+		progs.register("cdebootstrap")
 
 	def _setpaks(self, line):
 		self._tot_packs = len(line.split()) * 4
