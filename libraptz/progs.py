@@ -16,13 +16,12 @@ def register(prog):
                 if os.path.isfile(c):
                         progs[prog] = c
                         return True
-        print("Could not find %s in path." % prog)
-        return False
+        print("Could not find '%s' in path." % prog)
+        exit(0)
 
 def lock():
         locked=True
 
 
 def get(prog):
-        print("RETURN " + progs[prog] + " from " + prog)
         return progs[prog]

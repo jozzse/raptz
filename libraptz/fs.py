@@ -45,7 +45,6 @@ def umount_all(base):
 class Fs:
 	SYS=("/sys", "/proc", "/dev/pts", "/dev/shm")
 	def __init__(self, host):
-		print("REG")
 		self._host = host
 
 	def mknod(self, name, mode, type, maj, min):
