@@ -5,6 +5,22 @@ import time
 import atexit
 import progs
 from config import config
+import stat
+from stat import S_IFCHR, S_IFBLK
+
+NODES = (
+	( "mem",     0o640, S_IFCHR, 1, 1 ),
+	( "kmem",    0o640, S_IFBLK, 1, 2 ),
+	( "null",    0o666, S_IFCHR, 1, 3 ),
+	( "port",    0o640, S_IFCHR, 1, 4 ),
+	( "zero",    0o666, S_IFCHR, 1, 5 ),
+	( "full",    0o666, S_IFCHR, 1, 7 ),
+	( "random",  0o666, S_IFCHR, 1, 8 ),
+	( "urandom", 0o666, S_IFCHR, 1, 9 ),
+	( "tty",     0o666, S_IFCHR, 5, 0 ),
+	( "ram",     0o660, S_IFBLK, 1, 0 ),
+	( "loop",    0o660, S_IFBLK, 7, 0 ),
+)
 
 def umount_all(base):
 	f = open("/proc/mounts", "r")
@@ -27,18 +43,26 @@ def umount_all(base):
 	return ok
 
 class Fs:
-	SYS=("/sys", "/proc", "/dev")
+	SYS=("/sys", "/proc", "/dev/pts", "/dev/shm")
 	def __init__(self, host):
+		print("REG")
 		self._host = host
-		
+
+	def mknod(self, name, mode, type, maj, min):
+		path = config.sysroot("/dev/"+name)
+		if not os.path.exists(path):
+			os.mknod(path, mode | type, os.makedev(maj, min))
+
 	def mount_system(self):
 		for mp in self.SYS:
 			if self.bound(mp):
 				continue
 			if not self.bind(mp):
 				return False
+		for node in NODES:
+			self.mknod(*node)
 		return True
-	
+
 	def umount_system(self):
 		ok = True
 		for mp in self.SYS:
@@ -79,13 +103,15 @@ class FakeFs(Fs):
 
 class RootFs(Fs):
 	def __init__(self, host):
+		Fs.__init__(self, host)
 		progs.register("mount");
 		progs.register("umount");
-		self._host = host
 		atexit.register(umount_all, config.sysroot())
 
 	def bind(self, path):
 		mp = config.sysroot(path)
+		if not os.path.isdir(mp):
+			os.mkdir(mp)
 		r = self._host.runner
 		ret = r.run(["mount", "--bind", path, mp]) == 0
 		return ret
