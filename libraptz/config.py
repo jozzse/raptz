@@ -17,6 +17,7 @@ class Config:
 	def __init__(self):
 		config = self
 		self.arg_exec = sys.argv[0]
+		self._sysroot = "./dummmy"
 		if len(sys.argv) > 2:
 			self.arg_command = sys.argv[1]
 			self.arg_sysroot = sys.argv[2]
@@ -27,7 +28,9 @@ class Config:
 		else:
 			self.arg_command = "help"
 
-		if "--" in sys.argv:
+		if len(sys.argv) <= 2 or sys.argv[2] == "-h" or sys.argv[2] == "--help":
+			self.arg_opts = [ "--help" ]
+		elif "--" in sys.argv:
 			i = sys.argv.index("--")
 			self.arg_pass = sys.argv[i+1:]
 			self.arg_opts = sys.argv[3:i]
@@ -99,6 +102,10 @@ class Config:
 		return args
 
 	def save(self):
+		try:
+			self._setupfile
+		except AttributeError:
+			return
 		setup = SafeConfigParser()
 		setup.add_section("raptz")
 		setup.set("raptz", "mode", self.mode)
