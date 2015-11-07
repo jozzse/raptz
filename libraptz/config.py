@@ -18,11 +18,15 @@ class Config:
 		config = self
 		self.arg_exec = sys.argv[0]
 		self._sysroot = "./dummmy"
+		self._argp = ArgumentParser(prog="raptz")
 		if len(sys.argv) > 2:
 			self.arg_command = sys.argv[1]
 			self.arg_sysroot = sys.argv[2]
 			self._sysroot = os.path.abspath(sys.argv[2])
-		elif len(sys.argv) == 2:
+                        if sys.argv[1] == "help":
+                                self.arg_command = sys.argv[2]
+                                sys.argv[2] = "--help"
+	        elif len(sys.argv) == 2:
 			self.arg_command = sys.argv[1]
 			self.arg_opts = ["--help"]
 		else:
@@ -37,7 +41,6 @@ class Config:
 		else:
 			self.arg_opts = sys.argv[3:]
 
-		self._argp = ArgumentParser(prog="raptz")
 
 	def get_argparser(self):
 		return self._argp
