@@ -1,6 +1,7 @@
 
 import os
 import select
+import distutils.spawn
 from subprocess import Popen, PIPE
 
 class InFile:
@@ -127,11 +128,27 @@ class Cat(OutputPipe):
 
 
 class GZip(OutputPipe):
-	_prog=["pigz", "-c"]
+	if distutils.spawn.find_executable("pigz"):
+		_prog=["pigz", "-c"]
+	elif distutils.spawn.find_executable("gzip"):
+		_prog=["gzip", "-c"]
+	else:
+		raise "Could not find gzip utility pigz or gz"
 
 class BZip2(OutputPipe):
-	_prog=["pbzip2"]
+	if distutils.spawn.find_executable("pbzip2"):
+		_prog=["pbzip2"]
+	elif distutils.spawn.find_executable("bzip2"):
+		_prog=["bzip2"]
+	else:
+		raise "Could not find bz2 utility pbzip2 or bzip2"
+	
 
 class XZ(OutputPipe):
-	_prog=["pxz"]
+	if distutils.spawn.find_executable("pxz"):
+		_prog=["pxz"]
+	elif distutils.spawn.find_executable("xz"):
+		_prog=["xz"]
+	else:
+		raise "Could not find xz utility pxz or xz"
 
