@@ -48,7 +48,7 @@ class CDebootstrap(Bootstrap):
 			cmds.append("--keyring="+keyring)
 
 		cmds.append(config.suite())
-		cmds.append(config.sysroot())
+		cmds.append(config.rootfs())
 		cmds.append(config.source())
 #		cmds.append("/usr/share/debootstrap/scripts/testing")
 		r = host.runner

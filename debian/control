@@ -14,4 +14,4 @@ Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
 Description: Foreign architecture multistrap and setup
   raptz is capable of generating emDebian (and other systems) external
-  architecture sysroots on Debian wheezy and later or newer Ubuntu
+  architecture rootfs on Debian wheezy and later or newer Ubuntu

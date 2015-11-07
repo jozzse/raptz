@@ -75,7 +75,7 @@ class Part():
 			self._dump = info["dump"]
 		if "filesystem" in info:
 			self._filesystem = info["filesystem"]
-	def mk_image(self, baseimage, sysroot, populate):
+	def mk_image(self, baseimage, rootfs, populate):
 		return True
 	def get_image(self):
 		return (self._offset, self._size, self._image)
@@ -106,11 +106,11 @@ class File(Part):
 		self.source = info["source"]
 		self._offset = htos(info["offset"])
 
-	def mk_image(self, baseimage, sysroot, populate):
+	def mk_image(self, baseimage, rootfs, populate):
 		source = self.source
 		while source.startswith("/"):
 			source = source[1:]
-		self._image = os.path.join(sysroot, source)
+		self._image = os.path.join(rootfs, source)
 		if not os.path.isfile(self._image):
 			error("Could not find " + self.source + " in " + self._image)
 			return False
@@ -145,7 +145,7 @@ class Partition(Part):
 			self._boot = bool(info["bootable"])
 		self._device = int(info["device"])
 
-	def mk_image(self, baseimage, sysroot, populate):
+	def mk_image(self, baseimage, rootfs, populate):
 		self._image = baseimage + "." + self.name
 		if os.path.isfile(self._image):
 			os.unlink(self._image)
@@ -156,7 +156,7 @@ class Partition(Part):
 			return False
 		if not populate:
 			return True
-		return self.pop_fs(sysroot)
+		return self.pop_fs(rootfs)
 	def mk_fs(self, args=[]):
 		ret = subprocess.call(["/sbin/mkfs."+self._filesystem] + args + [self._image],
 			stdout=sout, stderr=serr)
@@ -171,12 +171,12 @@ class Partition(Part):
 		return ret
 
 class VFat(Partition):
-	def pop_fs(self, sysroot):
+	def pop_fs(self, rootfs):
 		if not self._mountpoint:
 			return True
-		sysroot = os.path.join(sysroot, self._mountpoint[1:])
-		slen = len(sysroot)
-		root, dirs, files = os.walk(sysroot).next()
+		rootfs = os.path.join(rootfs, self._mountpoint[1:])
+		slen = len(rootfs)
+		root, dirs, files = os.walk(rootfs).next()
 		srcs = []
 		for f in dirs + files:
 			srcs.append(os.path.join(root, f))
@@ -187,7 +187,7 @@ class VFat(Partition):
 class Ext(Partition):
 	hardlinks = {}
 	symlinks = []
-	def pop_ext_path(self, sysroot, path, name):
+	def pop_ext_path(self, rootfs, path, name):
 		srcpath = os.path.join(path, name)
 		st = os.lstat(srcpath)
 		src = '"' + srcpath + '"'
@@ -198,7 +198,7 @@ class Ext(Partition):
 			if st.st_ino in self.hardlinks:
 				cmd.append(" ".join(["ln", self.hardlinks[st.st_ino], dst]))
 				return cmd
-			self.hardlinks[st.st_ino] = '"/' + srcpath[len(sysroot):] + '"'
+			self.hardlinks[st.st_ino] = '"/' + srcpath[len(rootfs):] + '"'
 		if stat.S_ISLNK(m):
 			if old_symlinks:
 				(fd, tmplink) = tempfile.mkstemp()
@@ -230,19 +230,19 @@ class Ext(Partition):
 	def mk_fs(self, args=[]):
 		return Partition.mk_fs(self, args + ["-F"])
 
-	def pop_fs(self, sysroot):
+	def pop_fs(self, rootfs):
 		if not self._mountpoint:
 			return True
-		sysroot = os.path.join(sysroot, self._mountpoint[1:])
-		slen = len(sysroot)
+		rootfs = os.path.join(rootfs, self._mountpoint[1:])
+		slen = len(rootfs)
 		(fd, cmdfile) = tempfile.mkstemp()
-		for root, dirs, files in os.walk(sysroot):
+		for root, dirs, files in os.walk(rootfs):
 			if os.path.islink(root):
 				continue
 			dstdir = root[slen:]
 			os.write(fd, 'cd "/' + dstdir + '"\n')
 			for f in files + dirs:
-				ret = self.pop_ext_path(sysroot, root, f)
+				ret = self.pop_ext_path(rootfs, root, f)
 				if ret == None:
 					continue
 				elif isinstance(ret, str):
@@ -267,22 +267,22 @@ class Ext(Partition):
 class Disk():
 	"""
 	Create images and/or fstab information from image configuration file.
-	If image creation is required then a sysroot path should be supplied
-	to populate the sysroot.
+	If image creation is required then a rootfs path should be supplied
+	to populate the rootfs.
 	"""
 	parts = []
 	_image = "<NOT SPECIFIED>"
-	sysroot = None
+	rootfs = None
 	CHUNK_WRITE = 1024*1024*4
 	def __init__(self, args):
 		self.args = args
 		if args.image:
 			self._image = args.image
 		self.populate = not args.skip_population
-		if args.sysroot_path:
-			self.sysroot = args.sysroot_path
-			while self.sysroot.endswith("/"):
-				self.sysroot = self.sysroot[:-1]
+		if args.rootfs_path:
+			self.rootfs = args.rootfs_path
+			while self.rootfs.endswith("/"):
+				self.rootfs = self.rootfs[:-1]
 		parser = Parser()
 		parser.read(args.config_file)
 		parts = parser.sections()
@@ -363,12 +363,12 @@ class Disk():
 		return offset + 1024*1024*8
 
 	def gen_img(self):
-		if not self.sysroot:
-			error("You must specify a sysroot to generate images.")
+		if not self.rootfs:
+			error("You must specify a rootfs to generate images.")
 			return False
 		for part in self.parts:
 			log(["MAKE", "image", part.name, str(part._size),"start"])
-			if not part.mk_image(self._image, self.sysroot, self.populate):
+			if not part.mk_image(self._image, self.rootfs, self.populate):
 				error("Could not create image " + part.name)
 				return False
 			log(["MAKE", "image", part.name, str(part._size), "done"])
@@ -422,7 +422,7 @@ class Disk():
 
 if __name__=="__main__":
 	parser = ArgumentParser(description=Disk.__doc__)
-	parser.add_argument("-p", "--sysroot-path", default=None, help="Path to sysroot for image generation")
+	parser.add_argument("-p", "--rootfs-path", default=None, help="Path to rootfs for image generation")
 	parser.add_argument("-c", "--config-file", default="disk.cfg",	help="Path to disk configuration file")
 	parser.add_argument("-V", "--verbose", action='store_true', help="Parsable verbose mode (default False)")
 	parser.add_argument("-d", "--device", default="/dev/sdb", help="Path to base device (default /dev/sdb)")

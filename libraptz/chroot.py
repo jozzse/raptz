@@ -15,10 +15,10 @@ class ChRoot:
 	RCDFILE_CONTENT="""#!/bin/dash\nexit 101\n"""
 	def __init__(self, host):
 		self._host = host
-		self._rcddst = config.sysroot("/usr/sbin/policy-rc.d")
+		self._rcddst = config.rootfs("/usr/sbin/policy-rc.d")
 		progs.register(QEMU_BIN)
 		progs.register("chroot")
-		self._qemudst = config.sysroot(progs.get(QEMU_BIN))
+		self._qemudst = config.rootfs(progs.get(QEMU_BIN))
 
 	def run(self, cmds, env=None, stdoutfunc=None, stderrfunc=None, *kargs):
 		stdout = self._host.stdoutfd()
@@ -58,7 +58,7 @@ class ChRoot:
 
 	def chroot(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
 		self._ch_setup()
-		ch = [ "chroot", config.sysroot() ]
+		ch = [ "chroot", config.rootfs() ]
 		cmds = ch + cmds
 		oenv = os.environ
 		oenv["HOME"]="/root"
@@ -76,7 +76,7 @@ class FakeRoot(ChRoot):
 		ChRoot.__init__(self, host)
 
 	def run(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
-		envfile = config.sysroot("/lib/fake.env")
+		envfile = config.rootfs("/lib/fake.env")
 		fakecmd = [ "fakechroot", 
 			"fakeroot", 
 			"-s", envfile,
@@ -92,7 +92,7 @@ class FakeRoot(ChRoot):
 		return ChRoot.chroot(self, cmds, env, stdoutfunc, stderrfunc, *kargs)
 
 	def copy_ld(self):
-		libdir=config.sysroot("lib")
+		libdir=config.rootfs("lib")
 		ld = os.path.join(libdir, "ld-linux.so.3")
 		lddst = os.path.join(libdir, os.readlink(ld))
 		ldln = "/lib/ld-linux.so.3"

@@ -17,12 +17,12 @@ class Config:
 	def __init__(self):
 		config = self
 		self.arg_exec = sys.argv[0]
-		self._sysroot = "./dummmy"
+		self._rootfs = "./dummmy"
 		self._argp = ArgumentParser(prog="raptz")
 		if len(sys.argv) > 2:
 			self.arg_command = sys.argv[1]
-			self.arg_sysroot = sys.argv[2]
-			self._sysroot = os.path.abspath(sys.argv[2])
+			self.arg_rootfs = sys.argv[2]
+			self._rootfs = os.path.abspath(sys.argv[2])
                         if sys.argv[1] == "help":
                                 self.arg_command = sys.argv[2]
                                 sys.argv[2] = "--help"
@@ -47,7 +47,7 @@ class Config:
 
 	def setup(self):
 		setup = SafeConfigParser()
-		self._setupfile = self.sysroot("/var/lib/raptz.setup")
+		self._setupfile = self.rootfs("/var/lib/raptz.setup")
 		if os.path.isfile(self._setupfile):
 			setup.read(self._setupfile)
 		else:
@@ -77,12 +77,12 @@ class Config:
 
 		args = self._argp.parse_args(self.arg_opts)
 		if args.mode == "fake" and not os.getenv("FAKECHROOT"):
-			fakeenv = self.sysroot("fake.env")
+			fakeenv = self.rootfs("fake.env")
 			cmd = ["fakechroot", "-c", "fcr" ]
 			cmd+= ["fakeroot",
-				"-s", self.sysroot(fakeenv)]
+				"-s", self.rootfs(fakeenv)]
 			if os.path.exists(fakeenv):
-				cmd+=["-i", self.sysroot(fakeenv)]
+				cmd+=["-i", self.rootfs(fakeenv)]
 			cmd+= sys.argv
 			env = os.environ
 			env["PATH"]+=":/usr/sbin"
@@ -159,14 +159,14 @@ class Config:
 			return self._config.get("General", "fakepackages").split()
 		return []
 
-	def sysroot(self, path=None):
-		""" Get a sysroot path """
+	def rootfs(self, path=None):
+		""" Get a rootfs path """
 		if path == None:
-			return self._sysroot
+			return self._rootfs
 		while path.startswith("/"):
 			path = path[1:]
-#			return os.path.join(self._sysroot, path[1:])
-		return os.path.join(self._sysroot, path)
+#			return os.path.join(self._rootfs, path[1:])
+		return os.path.join(self._rootfs, path)
 	
 	def addsrcs(self, repro):
 		try:
@@ -174,9 +174,9 @@ class Config:
 		except NoOptionError:
 			return True
 	
-	def rmsysroot(self, path):
+	def rmrootfs(self, path):
 		#FIXME: Move me
-		return path[len(self._sysroot):]
+		return path[len(self._rootfs):]
 
 	def confpath(self, path=None):
 		""" Get configuration path """

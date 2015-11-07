@@ -6,8 +6,8 @@ from subprocess import Popen, PIPE
 
 class InFile:
 	_outputs = []
-	def __init__(self, sysroot):
-		self._sysroot = sysroot
+	def __init__(self, rootfs):
+		self._rootfs = rootfs
 
 	def add(self, output):
 		self._outputs.append(output)
@@ -60,15 +60,15 @@ class InFile:
 class Cpio(InFile):
 	def compress(self):
 		self._flist = []
-		sysroot = self._sysroot
-		sl = len(sysroot)+1
-		for root, dirs, files in os.walk(sysroot):
+		rootfs = self._rootfs
+		sl = len(rootfs)+1
+		for root, dirs, files in os.walk(rootfs):
 			for d in dirs:
 				self._flist.append(os.path.join(root, d)[sl:])
 			for f in files:
 				self._flist.append(os.path.join(root, f)[sl:])
 		cwd = os.getcwd()
-		os.chdir(sysroot)
+		os.chdir(rootfs)
 		cmd=["cpio", "-o"]
 		ret = self.write(cmd, self._stdin)
 		os.chdir(cwd)
@@ -81,8 +81,8 @@ class Cpio(InFile):
 
 class Tar(InFile):
 	def compress(self):
-		sysroot = self._sysroot
-		cmd=["tar", "-c", "-f", "-", "-C",  sysroot, "."] # tar to output
+		rootfs = self._rootfs
+		cmd=["tar", "-c", "-f", "-", "-C",  rootfs, "."] # tar to output
 		return self.write(cmd)
 
 class UnTar:

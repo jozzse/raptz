@@ -10,8 +10,8 @@ mkdir -p tst$mode
 _test()
 {
 	sys=tst$mode/$1
-	echo "$sys mksys"
-	./raptz mksys $sys -n sid -b $1 -m $mode -u log >${sys}.mksys.log 2>&1
+	echo "$sys mkroot"
+	./raptz mkroot $sys -n sid -b $1 -m $mode -u log >${sys}.mkroot.log 2>&1
 	echo "$sys cpio"
 	./raptz cpio $sys -x ${sys}.cpio.xz 
 	echo "$sys tar"
