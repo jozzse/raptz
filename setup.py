@@ -13,7 +13,7 @@ if __name__=="__main__":
 
 	setup(name='raptz',
 		version='0.1',
-		description='Rapid sysroot builder for Debian derivatives',
+		description='Rapid rootfs builder for Debian derivatives',
 		author='Jonas Zetteberg',
 		author_email='jozz@jozz.se',
 		url='http://jozz.no-ip.org/wiki/igep/emdebian/installer/raptz', # Fixme: make site

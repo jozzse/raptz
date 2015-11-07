@@ -4,7 +4,7 @@
 
 Create a system root:
 
-./rapts mksys <rootfs-path>
+./rapts mkroot <rootfs-path>
 
 Directory structure
 -------------------
@@ -19,22 +19,22 @@ top-dir
          +- init.dev.sh  - Optional init script for development
 
 
-Basics to get a sysroot (raptz mksys)
+Basics to get a rootfs (raptz mkroot)
 =====================================
 
-Step 1 - Install sysroot (raptz mksys)
+Step 1 - Install rootfs (raptz mkroot)
 ---------------------------------
 
 The <confdir>/raptz.cfg file is used when raptz.
 
 Since multistrapping does not setup a complete system (configuration on
 target architecture is needed for example) after multistrapping the
-<confdir>/root folder is copied to the sysroot. Files are copyed if newer than
-the file on sysroot or it does not exist on sysroot.
-This move makes them a part of the main sysroot.
+<confdir>/root folder is copied to the rootfs. Files are copyed if newer than
+the file on rootfs or it does not exist on rootfs.
+This move makes them a part of the main rootfs.
 
 After the each directory in <confdir>/conf/ folder is copied to a temporary
-directory in the sysroot and it's init scripts will be executed in a qemu
+directory in the rootfs and it's init scripts will be executed in a qemu
 enviroment. The number of the directory name specified the order of execution.
 Execution is done within a qemu-static chroot with the temporary directory
 included with the first argument.

@@ -17,7 +17,7 @@ class Bootstrap:
 		pass
 	
 	def finalize(self):
-		listd = config.sysroot("/etc/apt/sources.list.d")
+		listd = config.rootfs("/etc/apt/sources.list.d")
 
 		if not os.path.isdir(listd):
 			os.makedirs(listd)

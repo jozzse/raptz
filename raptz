@@ -31,12 +31,12 @@ class Script:
 
 class Raptz:
 	"""
-Raptz sysroot handler
+Raptz rootfs handler
 
-  raptz command [options]
+  raptz command <rootfs> [options]
 	"""
 	def chroot(self):
-		""" Chroot into a sysroot """
+		""" Chroot into a rootfs """
 		config.setup()
 		if config.arg_pass:
 			cmds = config.arg_pass
@@ -50,12 +50,12 @@ Raptz sysroot handler
 		return ret
 
 	def copy(self):
-		""" Copy root filesystem to new place (device for example)"""
+		""" Copy rootfs to new place (device for example)"""
 		argp = config.get_argparser()
 		argp.add_argument("-d", "--destination", default=None,
-			help="Destination folder to copy system too")
+			help="Destination folder to copy rootfs too")
 		args = config.setup()
-		sys = comp.Tar(config.sysroot())
+		sys = comp.Tar(config.rootfs())
 		sys.add(comp.UnTar(args.destination))
 		sys.compress()
 
@@ -78,7 +78,7 @@ Raptz sysroot handler
 		argp.add_argument("-x", "--xz", default=None,
 			help="Create a xz compressed file")
 		args = config.setup()
-		sys = basetype(config.sysroot())
+		sys = basetype(config.rootfs())
 		if args.raw and args.raw != "":
 			sys.add(comp.Cat(args.raw))
 		if args.gzip and args.gzip != "":
@@ -91,11 +91,11 @@ Raptz sysroot handler
 		return 0
 
 
-	def mksys(self):
-		""" Create a sysroot """
+	def mkroot(self):
+		""" Create a rootfs """
 		argp = config.get_argparser()
 		argp.add_argument("-k", "--keep", 
-			help="Do not clear the sysroot directory prior to sysroot generation",
+			help="Do not clear the rootfs directory prior to rootfs generation",
 			default=False, action='store_true')
 		argp.add_argument("-D", "--dev", help="Run development parts of configuration",
 			 default=False, action='store_true')

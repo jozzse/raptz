@@ -28,7 +28,7 @@ class Multistrap(Bootstrap):
 		par = SafeConfigParser()
 		par.add_section("General")
 		par.set("General", "arch", config.arch())
-		par.set("General", "directory", config.sysroot())
+		par.set("General", "directory", config.rootfs())
 		par.set("General", "cleanup", str(True))
 		par.set("General", "noauth", str(not config.auth()))
 		keyrings = config.keyrings()
@@ -98,7 +98,7 @@ class Multistrap(Bootstrap):
 		return True
 	
 	def finalize(self):
-		listd = config.sysroot("/etc/apt/sources.list.d")
+		listd = config.rootfs("/etc/apt/sources.list.d")
 		if os.path.isdir(listd):
 			shutil.rmtree(listd)
 		Bootstrap.finalize(self)

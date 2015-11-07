@@ -48,7 +48,7 @@ class Fs:
 		self._host = host
 
 	def mknod(self, name, mode, type, maj, min):
-		path = config.sysroot("/dev/"+name)
+		path = config.rootfs("/dev/"+name)
 		if not os.path.exists(path):
 			os.mknod(path, mode | type, os.makedev(maj, min))
 
@@ -105,10 +105,10 @@ class RootFs(Fs):
 		Fs.__init__(self, host)
 		progs.register("mount");
 		progs.register("umount");
-		atexit.register(umount_all, config.sysroot())
+		atexit.register(umount_all, config.rootfs())
 
 	def bind(self, path):
-		mp = config.sysroot(path)
+		mp = config.rootfs(path)
 		if not os.path.isdir(mp):
 			os.mkdir(mp)
 		r = self._host.runner
@@ -116,12 +116,12 @@ class RootFs(Fs):
 		return ret
 
 	def unbind(self, path):
-		mp = config.sysroot(path)
+		mp = config.rootfs(path)
 		r = self._host.runner
 		return r.run(["umount", mp]) == 0
 
 	def bound(self, path):
-		mp = config.sysroot(path)
+		mp = config.rootfs(path)
 		f = open("/proc/mounts", "r")
 		for line in f:
 			if line.split()[1] == mp:
