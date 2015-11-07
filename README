@@ -4,13 +4,13 @@
 
 Create a system root:
 
-./rapts mksys <sysroot-path>
+./rapts mksys <rootfs-path>
 
 Directory structure
 -------------------
 
 top-dir
- +- <confdir>            - The name of the sysroot (emdebian). 
+ +- <confdir>            - The name of the rootfs (or sysroot).
     +- raptz.cfg         - The multistrap configuration file
     +- root              - Extra root files for the enviroment
     +- conf              - Configuration files
