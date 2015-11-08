@@ -136,7 +136,7 @@ Raptz rootfs handler
 		return 0
 
 	def image(self):
-		""" Create an image from a rootfs """
+		""" Create an system image from a rootfs """
 		argp = config.get_argparser()
 		argp.add_argument("-i", "--image", default=config.rootfs()+".img",
 			help="bootstrap mode (default is <rootfs-path>.img)"
