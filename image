@@ -217,6 +217,9 @@ class Ext(Partition):
 		elif stat.S_ISCHR(m):
 			cmd.append(" ".join(["mknod", dst, "c",str(os.major(st.st_rdev)),
 				str(os.minor(st.st_rdev))]))
+		elif stat.S_ISBLK(m):
+			cmd.append(" ".join(["mknod", dst, "b",str(os.major(st.st_rdev)),
+				str(os.minor(st.st_rdev))]))
 		else:
 			raise "Unhandled filetype ", srcpath, st
 		cmd.append("sif " + dst + " mode " + str(st.st_mode))
@@ -401,13 +404,14 @@ class Disk():
 
 		# Write partition table
 		log(["WRT", "partitiontable", "start"])
+		print "/sbin/sfdisk", "--no-reread", self._image
 		ret = subprocess.call(["/sbin/sfdisk", "--no-reread", self._image],
 			stdin=dfd, stdout=sout, stderr=serr)
 		os.close(dfd)
-		unlink(deffile, "sfdisk.def")
 		if ret != 0:
 			error("Could not create partition table")
 			return False
+		unlink(deffile, "sfdisk.def")
 		log(["WRT", "partitiontable", "done"])
 
 		fd = os.open(self._image, os.O_WRONLY)
