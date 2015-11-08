@@ -11,8 +11,10 @@ from libraptz.debootstrap import Debootstrap
 from libraptz.multistrap import Multistrap
 from libraptz.apt import Apt
 from libraptz.raptzerror import RaptzException
+from libraptz.image import Disk
 import libraptz.comp as comp
 import libraptz.progs as progs
+
 #from libraptz.mount import Mount
 
 # Should be moved to ui?
@@ -131,6 +133,21 @@ Raptz rootfs handler
 		sc.add(cfg.configure)
 		sc.run()
 		host.fs.umount_system()
+		return 0
+
+	def image(self):
+		""" Create an image from a rootfs """
+		argp = config.get_argparser()
+		argp.add_argument("-i", "--image", default=config.rootfs()+".img",
+			help="bootstrap mode (default is <rootfs-path>.img)"
+		)
+		args = config.setup()
+		i = Disk(config.rootfs(), config.get_conf_path("disk.cfg") , args.image)
+		print "Generating %s from %s using %s" % (args.image, config.rootfs(), config.get_conf_path("disk.cfg"))
+		if i.gen_img():
+			print "Done"
+		else:
+			print "Fail"
 		return 0
 
 	def help(self):

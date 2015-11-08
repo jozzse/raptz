@@ -105,6 +105,11 @@ class Config:
 		self._config.read(os.path.join(self._confpath, "raptz.cfg"))
 		return args
 
+	def get_conf_path(self, for_file=None):
+		if not for_file:
+			return self._confpath
+		return os.path.join(self._confpath, for_file)
+
 	def save(self):
 		try:
 			self._setupfile
