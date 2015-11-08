@@ -18,7 +18,6 @@ class Config:
 		config = self
 		self.arg_exec = sys.argv[0]
 		self._rootfs = "./dummmy"
-		self._argp = ArgumentParser(prog="raptz")
 		if len(sys.argv) > 2:
 			self.arg_command = sys.argv[1]
 			self.arg_rootfs = sys.argv[2]
@@ -31,7 +30,9 @@ class Config:
 			self.arg_opts = ["--help"]
 		else:
 			self.arg_command = "help"
-
+	        self._argp = ArgumentParser(prog="raptz", usage='%(prog)s ' +
+                                            self.arg_command +
+                                            ' <rootfs-path> [options]')
 		if len(sys.argv) <= 2 or sys.argv[2] == "-h" or sys.argv[2] == "--help":
 			self.arg_opts = [ "--help" ]
 		elif "--" in sys.argv:

@@ -33,7 +33,7 @@ class Raptz:
 	"""
 Raptz rootfs handler
 
-  raptz command <rootfs> [options]
+  raptz <command> <rootfs> [options]
 	"""
 	def chroot(self):
 		""" Chroot into a rootfs """
