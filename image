@@ -163,9 +163,9 @@ class Partition(Part):
 		return ret == 0
 	def get_sfdiskline(self):
 		ret = " " + self._image
-		ret += ": start = " + str(self._offset/SECT_SIZE)
-		ret += ", size = " + str(self._size/SECT_SIZE)
-		ret += ", Id = " + self.fsid
+		ret += ": start= " + str(self._offset/SECT_SIZE)
+		ret += ", size= " + str(self._size/SECT_SIZE)
+		ret += ", Id= " + self.fsid
 		if self._boot:
 			ret += ", bootable"
 		return ret
