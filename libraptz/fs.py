@@ -18,6 +18,8 @@ NODES = (
 	( "random",  0o666, S_IFCHR, 1, 8 ),
 	( "urandom", 0o666, S_IFCHR, 1, 9 ),
 	( "tty",     0o666, S_IFCHR, 5, 0 ),
+	( "console", 0o622, S_IFCHR, 5, 1 ),
+	( "ptmx",    0o666, S_IFCHR, 5, 2 ),
 	( "ram",     0o660, S_IFBLK, 1, 0 ),
 	( "loop",    0o660, S_IFBLK, 7, 0 ),
 )
@@ -49,7 +51,9 @@ class Fs:
 
 	def mknod(self, name, mode, type, maj, min):
 		path = config.rootfs("/dev/"+name)
-		if not os.path.exists(path):
+		if os.path.exists(path):
+			os.chmod(path, mode)
+		else:
 			os.mknod(path, mode | type, os.makedev(maj, min))
 
 	def mount_system(self):
