@@ -24,6 +24,15 @@ NODES = (
 	( "loop",    0o660, S_IFBLK, 7, 0 ),
 )
 
+LNS = (
+    ( "/proc/self/fd", "/dev/fd" ),
+    ( "/proc/self/fd/0", "/dev/stdin" ),
+    ( "/proc/self/fd/1", "/dev/stdout" ),
+    ( "/proc/self/fd/2", "/dev/stderr" ),
+    ( "/proc/kcore", "/dev/core" ),
+)
+
+
 def umount_all(base):
 	f = open("/proc/mounts", "r")
 	mps=[]
@@ -56,14 +65,19 @@ class Fs:
 		else:
 			os.mknod(path, mode | type, os.makedev(maj, min))
 
+	def symlink(self, src, dst): 
+		dst = config.rootfs(dst)
+		if not os.path.exists(dst):
+			os.symlink(src, dst)
+
 	def mount_system(self):
 		for mp in self.SYS:
 			if self.bound(mp):
 				continue
 			if not self.bind(mp):
 				return False
-		for node in NODES:
-			self.mknod(*node)
+		[ self.mknod(*node) for node in NODES ]
+		[ self.symlink(*ln) for ln in LNS ]
 		return True
 
 	def umount_system(self):
