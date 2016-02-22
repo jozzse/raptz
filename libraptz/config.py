@@ -77,23 +77,23 @@ class Config:
 		)
 
 		args = self._argp.parse_args(self.arg_opts)
-		if args.mode == "fake" and not os.getenv("FAKECHROOT"):
-			fakeenv = self.rootfs("fake.env")
-			cmd = ["fakechroot", "-c", "fcr" ]
-			cmd+= ["fakeroot",
-				"-s", self.rootfs(fakeenv)]
-			if os.path.exists(fakeenv):
-				cmd+=["-i", self.rootfs(fakeenv)]
-			cmd+= sys.argv
-			env = os.environ
-			env["PATH"]+=":/usr/sbin"
-			env["PATH"]+=":/sbin"
-			if args.debug:
-				env["FAKECHROOT_DEBUG"] = "1"
-			print " ".join(cmd)
-			ret = call(cmd, env=env)
-			print ret
-			exit(ret)
+#		if args.mode == "fake" and not os.getenv("FAKECHROOT"):
+#			fakeenv = self.rootfs("fake.env")
+#			cmd = ["fakechroot", "-c", "fcr" ]
+#			cmd+= ["fakeroot",
+#				"-s", self.rootfs(fakeenv)]
+#			if os.path.exists(fakeenv):
+#				cmd+=["-i", self.rootfs(fakeenv)]
+#			cmd+= sys.argv
+#			env = os.environ
+#			env["PATH"]+=":/usr/sbin"
+#			env["PATH"]+=":/sbin"
+#			if args.debug:
+#				env["FAKECHROOT_DEBUG"] = "1"
+#			print " ".join(cmd)
+#			ret = call(cmd, env=env)
+#			print ret
+#			exit(ret)
 
 		self.mode = args.mode
 		self.name = args.name
@@ -160,6 +160,7 @@ class Config:
 		for c in cs:
 			ret += self._config.get(c, "packages").split()
 		return ret
+
 	def early_packages(self):
 		if self.mode == "fake":
 			return self._config.get("General", "fakepackages").split()

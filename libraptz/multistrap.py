@@ -39,7 +39,7 @@ class Multistrap(Bootstrap):
 		for repro in config.repros():
 			par.add_section(repro)
 			par.set(repro, "keyring", keyrings[repro])
-			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages()) + " ".join(config.packages()))
+			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages() + config.packages()))
 			par.set(repro, "source", config.source(repro))
 			par.set(repro, "suite", config.suite(repro))
 			par.set(repro, "components", " ".join(config.components(repro)))

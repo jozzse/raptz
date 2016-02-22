@@ -34,9 +34,9 @@ class Host():
 			self.runner = FakeRoot(self)
 			self.fs = FakeFs(self)
 		else:
-			self.runner = ChRoot(self)
 			if os.getuid() != 0:
 				raise RaptzException("You shall be root to run in root mode")
+			self.runner = ChRoot(self)
 			self.fs = RootFs(self)
 
 	def redirout(self):

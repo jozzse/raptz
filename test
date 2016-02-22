@@ -7,28 +7,43 @@ fi
 set -e
 
 mkdir -p tst$mode
+
+_fail()
+{
+	echo "$@"
+	exit 1
+}
+
 _test()
 {
 	sys=tst$mode/$1
 	echo "$sys mkroot"
-	./raptz mkroot $sys -n sid -b $1 -m $mode -u log >${sys}.mkroot.log 2>&1
+	./raptz mkroot $sys -n sid -b $1 -m $mode || _fail "Could not mkroot $1"
+
 	echo "$sys cpio"
-	./raptz cpio $sys -x ${sys}.cpio.xz 
+	./raptz cpio $sys -x ${sys}.cpio.xz || _fail "cpio returned $?"
+	[ -e "${sys}.cpio.xz" ] || _fail "Could not create cpio xz archive"
+
 	echo "$sys tar"
-	./raptz tar $sys -r ${sys}.tar -g ${sys}.tar.gz -b${sys}.tar.bz2
+	./raptz tar $sys -r ${sys}.tar -g ${sys}.tar.gz -b${sys}.tar.bz2 || _fail "tar returned $?"
+	[ -e "${sys}.tar.gz" ] || _fail "Could not create tar gz archive"
+	[ -e "${sys}.tar.bz2" ] || _fail "Could not create tar bzip2 archive"
+
 	echo "$sys chroot pipe"
 	RET=$(echo "echo ok1" | ./raptz chroot $sys)
-	[ "$RET" = "ok1" ]
+	[ "$RET" = "ok1" ] || _fail "Echo via pipe did not get passed through"
+
 	echo "$sys chroot dash dash"
 	RET=$(./raptz chroot $sys -- echo ok2)
-	[ "$RET" = "ok2" ]
+	[ "$RET" = "ok2" ] || _fail "Echo via dash did not get passed through"
+
 	echo "$sys chroot return"
 	./raptz chroot $sys -- bash -c "exit 42" || RET=$?
-	[ "$RET" = 42 ]
+	[ "$RET" = 42 ] || _fail "Return value did not match"
 	return 0
 }
 
-_test debootstrap
 _test multistrap
+_test debootstrap
 
 rm -rf tst$mode

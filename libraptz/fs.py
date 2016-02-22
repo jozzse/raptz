@@ -59,11 +59,7 @@ class Fs:
 		self._host = host
 
 	def mknod(self, name, mode, type, maj, min):
-		path = config.rootfs("/dev/"+name)
-		if os.path.exists(path):
-			os.chmod(path, mode)
-		else:
-			os.mknod(path, mode | type, os.makedev(maj, min))
+		raise
 
 	def symlink(self, src, dst): 
 		dst = config.rootfs(dst)
@@ -104,6 +100,21 @@ class Fs:
 
 class FakeFs(Fs):
 	_binds=[]
+	def binds(self):
+		return self._binds
+
+	def mknod(self, name, mode, type, maj, min):
+		path = config.rootfs("/dev/"+name)
+		cmd = [ "mknod", "-m", "%o" % mode, path ]
+		if type == S_IFCHR:
+			cmd.append("c")
+		else:
+			cmd.append("b")
+		cmd.append(str(maj))
+		cmd.append(str(min))
+		r = self._host.runner
+		r.run(cmd)
+
 	def bind(self, mp):
 		self._binds.append(mp)
 		return True
@@ -124,6 +135,13 @@ class RootFs(Fs):
 		progs.register("mount");
 		progs.register("umount");
 		atexit.register(umount_all, config.rootfs())
+	
+	def mknod(self, name, mode, type, maj, min):
+		path = config.rootfs("/dev/"+name)
+		if os.path.exists(path):
+			os.chmod(path, mode)
+		else:
+			os.mknod(path, mode | type, os.makedev(maj, min))
 
 	def bind(self, path):
 		mp = config.rootfs(path)

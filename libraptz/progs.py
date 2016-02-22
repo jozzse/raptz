@@ -16,6 +16,13 @@ def register(prog):
                 if os.path.isfile(c):
                         progs[prog] = c
                         return True
+	
+        for loc in ("/sbin", "/usr/sbin"):
+                c = os.path.join(loc, prog)
+                if os.path.isfile(c):
+                        progs[prog] = os.path.join(loc, c)
+                        return True
+	
         print("Could not find '%s' in path." % prog)
         exit(0)
 
