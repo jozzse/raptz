@@ -28,7 +28,3 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 EOF
 fi
-
-if ! cat /etc/inittab | grep ttyO2 > /dev/null ; then
-	echo "s0:2345:respawn:/sbin/getty -L ttyO2 115200 vt100" >> /etc/inittab
-fi
