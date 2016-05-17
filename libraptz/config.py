@@ -13,7 +13,6 @@ class Config:
 	name = "sid"
 	mode = "root"
 	logfile = "raptz.log"
-	ui = "term"
 	def __init__(self):
 		config = self
 		self.arg_exec = sys.argv[0]
@@ -72,9 +71,6 @@ class Config:
 			default=self.logfile,
 			help="Set logfile (default raptz.log)"
 		)
-		self._argp.add_argument('-u', '--ui', default=self.ui,
-			help="Ui selection (log, term)"
-		)
 
 		args = self._argp.parse_args(self.arg_opts)
 #		if args.mode == "fake" and not os.getenv("FAKECHROOT"):
@@ -98,7 +94,6 @@ class Config:
 		self.mode = args.mode
 		self.name = args.name
 		self.logfile = args.logfile
-		self.ui = args.ui
 		self.debug = args.debug
 		self._confpath = os.path.abspath(args.name)
 		self._config = SafeConfigParser()

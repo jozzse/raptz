@@ -47,7 +47,7 @@ class Multistrap(Bootstrap):
 		self._msfile.close()
 		r = host.runner
 		cmds = ["multistrap", "-f", self._msfile.name]
-		if r.run(cmds, stdoutfunc=self._stdout, stderrfunc=self._stderr) != 0:
+		if r.run(cmds) != 0:
 			raise RaptzException("Multistrap main stage failed")
 
 	def _stdout(self, line):
@@ -79,24 +79,10 @@ class Multistrap(Bootstrap):
 		cmds = ["/var/lib/dpkg/info/dash.preinst", "install"]
 		if r.chroot(cmds, env) != 0:
 			raise RaptzException("Multistrap second stage failed")
-		pout, pin = os.pipe()
-		cmds = [ "dpkg", "--configure", "-a", "--status-fd", str(pin)]
-		stfile = os.fdopen(pout)
-		p.add(stfile, self._dpkg_status)
+		cmds = [ "dpkg", "--configure", "-a"]
 		if r.chroot(cmds, env) != 0:
-			p.remove(stfile)
 			raise RaptzException("Multistrap second stage failed")
-		p.remove(stfile)
 
-	def _dpkg_status(self, f, ev):
-		if ev != select.POLLIN:
-			return False
-		st = [ x.strip() for x in  f.readline().split(":") ]
-		if st[0] == "status" and st[-1] == "installed":
-			self._done += 1.0
-			host.progress(float(self._done)/self._items)
-		return True
-	
 	def finalize(self):
 		listd = config.rootfs("/etc/apt/sources.list.d")
 		if os.path.isdir(listd):

@@ -22,9 +22,7 @@ class ChRoot:
 		progs.register("chroot")
 		self._qemudst = config.rootfs(progs.get(QEMU_BIN))
 
-	def run(self, cmds, env={}, stdoutfunc=None, stderrfunc=None, *kargs):
-		stdout = self._host.stdoutfd()
-		stderr = self._host.stderrfd()
+	def run(self, cmds, env={}, *kargs):
 		renv = os.environ
 		cmds[0] = progs.get(cmds[0])
 		for key, value in env.items():
@@ -32,18 +30,6 @@ class ChRoot:
 		for key, value in self._host.fs.env().items():
 			renv[key] = value
 
-		if stdout != 1 or stderr != 2:
-			self._host.add_outcb(stdoutfunc, *kargs)
-			self._host.add_errcb(stderrfunc, *kargs)
-			self._host.text("$ " + " ".join(cmds))
-			p = Popen(cmds, env=env,
-				stdout=stdout, stderr=stderr)
-			while p.poll() == None:
-				self._host.poller.poll(.01)
-			ret = p.wait()
-			self._host.remove_outcb(stdoutfunc)
-			self._host.remove_errcb(stderrfunc)
-			return ret
 		return call(cmds, env=renv)
 
 	def _ch_setup(self):

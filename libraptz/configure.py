@@ -32,7 +32,6 @@ class Configure:
 			for f in files:
 				srcf = os.path.join(srcroot, f)
 				dstf = os.path.join(dstroot, f)
-				host.text(" ".join(["cp ", srcf, dstf]))
 				shutil.copy2(srcf, dstf)
 
 	def configure(self):

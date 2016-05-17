@@ -24,11 +24,9 @@ class Script:
 		self._script.append((cmd, kargs))
 
 	def run(self):
-		host.set_parts(len(self._script))
 		for cmd, kargs in self._script:
 			host.start(cmd.__name__)
 			cmd(*kargs)
-			host.done()
 		return True
 
 class Raptz:
@@ -47,7 +45,6 @@ Raptz rootfs handler
 			cmds = config.arg_pass
 		else:
 			cmds=["bash"]
-		config.ui = "log"
 		host.setup(args.clean_mounts)
 		host.fs.mount_system()
 		ret = host.runner.chroot(cmds)
