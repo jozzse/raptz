@@ -33,7 +33,11 @@ LNS = (
 )
 
 
-def umount_all(base):
+def umount_all(unmountall, base, fs):
+	if not unmountall:
+		fs.umount_system()
+		return True
+	# Unmount all in base
 	f = open("/proc/mounts", "r")
 	mps=[]
 	for line in f:
@@ -130,11 +134,11 @@ class FakeFs(Fs):
 		return { "FAKECHROOT_EXCLUDE_PATH" : ":".join(self._binds) }
 
 class RootFs(Fs):
-	def __init__(self, host):
+	def __init__(self, host, unmountall):
 		Fs.__init__(self, host)
 		progs.register("mount");
 		progs.register("umount");
-		atexit.register(umount_all, config.rootfs())
+		atexit.register(umount_all, unmountall, config.rootfs(), self)
 	
 	def mknod(self, name, mode, type, maj, min):
 		path = config.rootfs("/dev/"+name)

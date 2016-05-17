@@ -22,7 +22,7 @@ class Host():
 	def __init__(self):
 		pass
 
-	def setup(self):
+	def setup(self, umountall=False):
 		self._log = open(config.logfile, "w")
 		if config.ui == "term":
 			self._ui = UiTerm()
@@ -37,7 +37,7 @@ class Host():
 			if os.getuid() != 0:
 				raise RaptzException("You shall be root to run in root mode")
 			self.runner = ChRoot(self)
-			self.fs = RootFs(self)
+			self.fs = RootFs(self, umountall)
 
 	def redirout(self):
 		pin, self._stdoutfd = os.pipe()

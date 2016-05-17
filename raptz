@@ -39,13 +39,16 @@ Raptz rootfs handler
 	"""
 	def chroot(self):
 		""" Chroot into a rootfs """
-		config.setup()
+		argp = config.get_argparser()
+		argp.add_argument("-C", "--clean-mounts", help="Clean All mountpoints inside chroot at exit",
+			 default=False, action='store_true')
+		args = config.setup()
 		if config.arg_pass:
 			cmds = config.arg_pass
 		else:
 			cmds=["bash"]
 		config.ui = "log"
-		host.setup()
+		host.setup(args.clean_mounts)
 		host.fs.mount_system()
 		ret = host.runner.chroot(cmds)
 		host.fs.umount_system()
