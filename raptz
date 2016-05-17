@@ -99,8 +99,6 @@ Raptz rootfs handler
 		argp.add_argument("-k", "--keep", 
 			help="Do not clear the rootfs directory prior to rootfs generation",
 			default=False, action='store_true')
-		argp.add_argument("-D", "--dev", help="Run development parts of configuration",
-			 default=False, action='store_true')
 		argp.add_argument("-S", "--suite", help="Set different suite to install",
 			default=None)
 		argp.add_argument("-b", "--bootstrap", default="multistrap",

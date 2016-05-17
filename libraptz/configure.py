@@ -51,14 +51,6 @@ class Configure:
 				stdoutfunc=self._stdout,
 				stderrfunc=self._stdout)
 
-			# Run dev scripts if avalible, disabel as of now
-			#dstinit = config.rmrootfs(os.path.join(dst, "init.dev.sh"))
-			#if config.args.dev and os.path.isdir(config.rootfs(dstinit)):
-			#	dstarg = config.rmrootfs(dst)
-			#	ret = ch.chroot([dstinit, dstarg],
-			#		stdoutfunc=self._stdout,
-			#		stderrfunc=self._stdout)
-
 			shutil.rmtree(dst)
 			if ret != 0:
 				raise RaptzException("Configure " + d + " failed")
