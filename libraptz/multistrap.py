@@ -71,7 +71,6 @@ class Multistrap(Bootstrap):
 		host.fs.mount_system()
 		self._done = 0.0
 		r = host.runner
-		p = host.poller
 		env={
 			"DEBIAN_FRONTEND" : "noninteractive",
 			"DEBCONF_NONINTERACTIVE_SEEN" : "true",

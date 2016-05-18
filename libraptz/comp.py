@@ -50,7 +50,6 @@ class InFile:
 			for f in self._fds:
 				f.write(d)
 				f.flush()
-		#print poller.poll(.01)
 		print "Archive is", inlen
 		for f in self._fds:
 			f.close()

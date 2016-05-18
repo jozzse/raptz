@@ -61,9 +61,7 @@ class Apt():
 			cmd += pkgs
 
 		stfile = os.fdopen(pout)
-		host.poller.add(stfile, self._apt_status)
 		ret = host.runner.chroot(cmd)
-		host.poller.remove(stfile)
 		return ret
 
 	def _apt_status(self, f, ev):
