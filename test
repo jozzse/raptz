@@ -16,7 +16,7 @@ _fail()
 mkdir -p testroots
 sys=testroots/default
 echo "$sys mkroot"
-./raptz mkroot $sys -n sid || _fail "Could not mkroot $1"
+./raptz mkroot $sys -n sid "$@" || _fail "Could not mkroot"
 
 echo "$sys cpio"
 ./raptz cpio $sys -x ${sys}.cpio.xz || _fail "cpio returned $?"
