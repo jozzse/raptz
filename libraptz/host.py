@@ -22,8 +22,6 @@ class Host():
 		pass
 
 	def setup(self, umountall=False):
-		self._log = open(config.logfile, "w")
-
 		if config.mode == "fake":
 			self.runner = FakeRoot(self)
 			self.fs = FakeFs(self)

@@ -12,7 +12,8 @@ class Config:
 	arg_pass = None
 	name = "sid"
 	mode = "root"
-	logfile = "raptz.log"
+	stdout = None # No redirection
+	stderr = None # No redirection
 	def __init__(self):
 		config = self
 		self.arg_exec = sys.argv[0]
@@ -68,8 +69,12 @@ class Config:
 			help="Enable debug mode"
 		)
 		self._argp.add_argument('-l', '--logfile',
-			default=self.logfile,
-			help="Set logfile (default raptz.log)"
+			default=None,
+			help="Log to file instead of terminal"
+		)
+		self._argp.add_argument('-q', '--quiet',
+			action='store_true', default=False,
+			help="Do not print log from standard-out"
 		)
 
 		args = self._argp.parse_args(self.arg_opts)
@@ -93,7 +98,13 @@ class Config:
 
 		self.mode = args.mode
 		self.name = args.name
-		self.logfile = args.logfile
+		if args.logfile is not None:
+			logfile = open(args.logfile, "w")
+			self.stdout = logfile
+			self.stderr = logfile
+		if args.quiet:
+			nullfile = open("/dev/null", "w")
+			self.stdout = nullfile
 		self.debug = args.debug
 		self._confpath = os.path.abspath(args.name)
 		self._config = SafeConfigParser()

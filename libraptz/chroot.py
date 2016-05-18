@@ -30,7 +30,7 @@ class ChRoot:
 		for key, value in self._host.fs.env().items():
 			renv[key] = value
 
-		return call(cmds, env=renv)
+		return call(cmds, env=renv, stdout=config.stdout, stderr=config.stderr)
 
 	def _ch_setup(self):
 		shutil.copy(progs.get(QEMU_BIN), self._qemudst)
@@ -106,5 +106,5 @@ class FakeRoot(ChRoot):
 		if os.getuid() != 0:
 			print "SUDO"
 			cmd = ["sudo"] + cmd
-		return call(cmd) == 0
+		return call(cmd, stdout=config.stdout, stderr=config.stderr) == 0
 
