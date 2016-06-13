@@ -160,12 +160,14 @@ class Config:
 			ret[c] = self._config.get(c, "keyring")
 		return ret
 
-	def packages(self, ctype="bootstrap"):
+	def packages(self, part=None, ctype="bootstrap"):
 		cs=self._config.get("General", ctype).split()
-		ret=[]
-		for c in cs:
-			ret += self._config.get(c, "packages").split()
-		return ret
+		if part is None:
+			ret=[]
+			for c in cs:
+				ret += self._config.get(c, "packages").split()
+			return ret
+		return self._config.get(part, "packages").split()
 
 	def early_packages(self):
 		if self.mode == "fake":

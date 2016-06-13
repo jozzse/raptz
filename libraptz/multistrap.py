@@ -29,8 +29,8 @@ class Multistrap(Bootstrap):
 		par.add_section("General")
 		par.set("General", "arch", config.arch())
 		par.set("General", "directory", config.rootfs())
-		par.set("General", "cleanup", str(True))
-		par.set("General", "noauth", str(not config.auth()))
+		par.set("General", "cleanup", str(True).lower())
+		par.set("General", "noauth", str(not config.auth()).lower())
 		keyrings = config.keyrings()
 		par.set("General", "bootstrap", " ".join(keyrings.keys()))
 		repros = config.repros()
@@ -39,7 +39,7 @@ class Multistrap(Bootstrap):
 		for repro in config.repros():
 			par.add_section(repro)
 			par.set(repro, "keyring", keyrings[repro])
-			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages() + config.packages()))
+			par.set(repro, "packages", "dash apt apt-utils " + " ".join(config.early_packages() + config.packages(repro)))
 			par.set(repro, "source", config.source(repro))
 			par.set(repro, "suite", config.suite(repro))
 			par.set(repro, "components", " ".join(config.components(repro)))
@@ -48,7 +48,9 @@ class Multistrap(Bootstrap):
 		r = host.runner
 		cmds = ["multistrap", "-f", self._msfile.name]
 		if r.run(cmds) != 0:
+			print(cmds)
 			raise RaptzException("Multistrap main stage failed")
+
 
 	def _stdout(self, line):
 		if line.find("upgraded, ") < line.find("newly installed, "):
