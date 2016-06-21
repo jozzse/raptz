@@ -50,7 +50,7 @@ class ChRoot:
 		# If there is a resolv.conf move it to resolv.conf.real
 		# Move host resolv.conf to target resolv.conf and store its md5 in self._resolvhash
 		tconf=config.rootfs(RESOLV_CONF_PATH)
-		if os.path.exists(tconf):
+		if os.path.lexists(tconf):
 			os.rename(tconf, tconf+".real")
 		shutil.copy(RESOLV_CONF_PATH, tconf)
 		open(tconf, "a").write("""
@@ -67,10 +67,10 @@ class ChRoot:
 		tconf = config.rootfs(RESOLV_CONF_PATH)
 		if not os.path.islink(tconf) and hashfile(tconf) == self._resolvhash:
 			os.unlink(tconf)
-			if os.path.exists(tconf+".real"):
+			if os.path.lexists(tconf+".real"):
 				os.rename(tconf+".real", tconf)
 		else:
-			if os.path.exists(tconf+".real"):
+			if os.path.lexists(tconf+".real"):
 				os.unlink(tconf + ".real")
 		del self._resolvhash
 
